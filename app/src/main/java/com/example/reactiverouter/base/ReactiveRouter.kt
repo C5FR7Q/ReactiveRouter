@@ -8,15 +8,17 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.BehaviorSubject
 import kotlin.math.max
 
-open class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
-	private val fragmentManager: FragmentManager,
-	private val scopeProvider: SP
+abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
+	private val fragmentManager: FragmentManager
 ) : FragmentManager.OnBackStackChangedListener {
+	private val scopeProvider = createScopeProvider()
 	private val backStackSubject = BehaviorSubject.createDefault(backStack)
 	private val deferredScopes = mutableListOf<Pair<Scope<N>, BehaviorSubject<Boolean>>>()
 	private val deferredScopesSubject = BehaviorSubject.createDefault(deferredScopes)
 
 	private val subscriptions = CompositeDisposable()
+
+	abstract fun createScopeProvider(): SP
 
 	fun attach() {
 		fragmentManager.addOnBackStackChangedListener(this)
