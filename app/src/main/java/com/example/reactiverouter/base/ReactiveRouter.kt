@@ -9,7 +9,7 @@ import io.reactivex.subjects.BehaviorSubject
 import kotlin.math.max
 
 abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
-	private val fragmentManager: FragmentManager
+	protected val fragmentManager: FragmentManager
 ) : FragmentManager.OnBackStackChangedListener {
 	private val scopeProvider = createScopeProvider()
 	private val backStackSubject = BehaviorSubject.createDefault(backStack)

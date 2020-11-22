@@ -7,7 +7,8 @@ open class Scope<N : Navigator>(private val navigator: N) {
 		deferredActions.add(action)
 	}
 
-	operator fun plus(scope: Scope<N>) {
+	infix operator fun plus(scope: Scope<N>): Scope<N> {
 		deferredActions.addAll(scope.deferredActions)
+		return this
 	}
 }
