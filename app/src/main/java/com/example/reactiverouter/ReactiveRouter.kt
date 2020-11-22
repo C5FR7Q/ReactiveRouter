@@ -8,10 +8,12 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.BehaviorSubject
 import kotlin.math.max
 
-class ReactiveRouter(private val fragmentManager: FragmentManager) : FragmentManager.OnBackStackChangedListener {
-	private val scopeProvider = ScopeProvider(NavigatorImpl())
+open class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
+	private val fragmentManager: FragmentManager,
+	private val scopeProvider: SP
+) : FragmentManager.OnBackStackChangedListener {
 	private val backStackSubject = BehaviorSubject.createDefault(backStack)
-	private val deferredScopes = mutableListOf<Pair<Scope, BehaviorSubject<Boolean>>>()
+	private val deferredScopes = mutableListOf<Pair<Scope<N>, BehaviorSubject<Boolean>>>()
 	private val deferredScopesSubject = BehaviorSubject.createDefault(deferredScopes)
 
 	private val subscriptions = CompositeDisposable()
@@ -45,7 +47,7 @@ class ReactiveRouter(private val fragmentManager: FragmentManager) : FragmentMan
 
 	val backStackStream: Observable<List<FragmentManager.BackStackEntry>> = backStackSubject.hide()
 
-	override fun onBackStackChanged() {
+	final override fun onBackStackChanged() {
 		backStackSubject.onNext(backStack)
 	}
 
@@ -57,12 +59,12 @@ class ReactiveRouter(private val fragmentManager: FragmentManager) : FragmentMan
 			}
 		}
 
-	fun call(provideScope: ScopeProvider.() -> Scope) = Completable.defer {
+	fun call(provideScope: SP.() -> Scope<N>) = Completable.defer {
 		val scope = scopeProvider.provideScope()
 		deferScope(scope)
 	}
 
-	private fun deferScope(scope: Scope): Completable {
+	private fun deferScope(scope: Scope<N>): Completable {
 		val subject = BehaviorSubject.create<Boolean>()
 		deferredScopes.add(scope to subject)
 		notifyScopesChanged()
@@ -71,15 +73,5 @@ class ReactiveRouter(private val fragmentManager: FragmentManager) : FragmentMan
 
 	private fun notifyScopesChanged() {
 		deferredScopesSubject.onNext(deferredScopes)
-	}
-
-	private inner class NavigatorImpl : Navigator {
-		override fun show() {
-			TODO("Not yet implemented")
-		}
-
-		override fun close() {
-			TODO("Not yet implemented")
-		}
 	}
 }

@@ -1,16 +1,13 @@
 package com.example.reactiverouter
 
-class Scope(private val navigator: Navigator) : Navigator {
+open class Scope<N : Navigator>(private val navigator: N) {
 	val deferredActions = mutableListOf<() -> Unit>()
-	override fun show() {
-		deferredActions.add { navigator.show() }
+
+	fun defer(action: () -> Unit) {
+		deferredActions.add(action)
 	}
 
-	override fun close() {
-		deferredActions.add { navigator.close() }
-	}
-
-	operator fun plus(scope: Scope) {
+	operator fun plus(scope: Scope<N>) {
 		deferredActions.addAll(scope.deferredActions)
 	}
 }

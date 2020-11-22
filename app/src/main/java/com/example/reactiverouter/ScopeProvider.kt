@@ -1,5 +1,5 @@
 package com.example.reactiverouter
 
-class ScopeProvider(private val navigator: Navigator) {
-	protected fun scope(scopeBody: Scope.() -> Unit) = Scope(navigator).apply { scopeBody() }
+abstract class ScopeProvider<N : Navigator>(private val navigator: N) {
+	protected fun scope(scopeBody: Scope<N>.() -> Unit) = Scope(navigator).apply { scopeBody() }
 }
