@@ -1,4 +1,4 @@
-package com.example.reactiverouter
+package com.example.reactiverouter.base
 
 open class Scope<N : Navigator>(private val navigator: N) {
 	val deferredActions = mutableListOf<() -> Unit>()

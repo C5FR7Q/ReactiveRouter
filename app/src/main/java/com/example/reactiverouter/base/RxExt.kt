@@ -1,4 +1,4 @@
-package com.example.reactiverouter
+package com.example.reactiverouter.base
 
 import io.reactivex.Observable
 

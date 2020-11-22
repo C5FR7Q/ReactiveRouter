@@ -1,4 +1,4 @@
-package com.example.reactiverouter
+package com.example.reactiverouter.base
 
 import androidx.fragment.app.FragmentManager
 import io.reactivex.Completable
