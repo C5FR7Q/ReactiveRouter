@@ -28,9 +28,7 @@ class ReactiveRouter(private val fragmentManager: FragmentManager) : FragmentMan
 		get() = mutableListOf<FragmentManager.BackStackEntry>().apply {
 			val backStackSize = fragmentManager.backStackEntryCount
 			for (i in 0 until backStackSize) {
-				add(
-					fragmentManager.getBackStackEntryAt(i)
-				)
+				add(fragmentManager.getBackStackEntryAt(i))
 			}
 		}
 
