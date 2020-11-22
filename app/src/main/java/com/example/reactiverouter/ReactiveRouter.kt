@@ -51,7 +51,6 @@ open class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		deferredScopesSubject
 			.filter { it.isNotEmpty() }
 			.map { it.first() }
-			// TODO[VVA]: 22.11.20 Possible bug in case of same scopes going one by one
 			.distinctUntilChanged()
 			.observeOn(AndroidSchedulers.mainThread())
 			.switchMap { (scope, subject) ->
