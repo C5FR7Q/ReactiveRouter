@@ -12,7 +12,7 @@
 		android:supportsRtl = "true"
 		android:theme = "@style/Theme.ReactiveRouter"
 		>
-		<activity android:name = ".MainActivity">
+		<activity android:name = ".example.MainActivity">
 			<intent-filter>
 				<action android:name = "android.intent.action.MAIN" />
 
