@@ -20,6 +20,34 @@ open class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 
 	fun attach() {
 		fragmentManager.addOnBackStackChangedListener(this)
+		loopDeferredScopes()
+	}
+
+	fun detach() {
+		fragmentManager.removeOnBackStackChangedListener(this)
+		subscriptions.dispose()
+	}
+
+	fun call(provideScope: SP.() -> Scope<N>) = Completable.defer {
+		val scope = scopeProvider.provideScope()
+		deferScope(scope)
+	}
+
+	val backStackStream: Observable<List<FragmentManager.BackStackEntry>> = backStackSubject.hide()
+
+	final override fun onBackStackChanged() {
+		backStackSubject.onNext(backStack)
+	}
+
+	private val backStack: List<FragmentManager.BackStackEntry>
+		get() = mutableListOf<FragmentManager.BackStackEntry>().apply {
+			val backStackSize = fragmentManager.backStackEntryCount
+			for (i in 0 until backStackSize) {
+				add(fragmentManager.getBackStackEntryAt(i))
+			}
+		}
+
+	private fun loopDeferredScopes() {
 		deferredScopesSubject
 			.filter { it.isNotEmpty() }
 			.map { it.first() }
@@ -38,30 +66,6 @@ open class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 				notifyScopesChanged()
 			}
 			.also { subscriptions.add(it) }
-	}
-
-	fun detach() {
-		fragmentManager.removeOnBackStackChangedListener(this)
-		subscriptions.dispose()
-	}
-
-	val backStackStream: Observable<List<FragmentManager.BackStackEntry>> = backStackSubject.hide()
-
-	final override fun onBackStackChanged() {
-		backStackSubject.onNext(backStack)
-	}
-
-	private val backStack: List<FragmentManager.BackStackEntry>
-		get() = mutableListOf<FragmentManager.BackStackEntry>().apply {
-			val backStackSize = fragmentManager.backStackEntryCount
-			for (i in 0 until backStackSize) {
-				add(fragmentManager.getBackStackEntryAt(i))
-			}
-		}
-
-	fun call(provideScope: SP.() -> Scope<N>) = Completable.defer {
-		val scope = scopeProvider.provideScope()
-		deferScope(scope)
 	}
 
 	private fun deferScope(scope: Scope<N>): Completable {
