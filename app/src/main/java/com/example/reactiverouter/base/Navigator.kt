@@ -13,7 +13,7 @@ abstract class Navigator {
 	/**
 	 * Should be called by each function, that changes back stack.
 	 * */
-	fun increaseStackChangeActionsCount() {
+	protected fun increaseStackChangeActionsCount() {
 		stackChangeActionsCount++
 	}
 

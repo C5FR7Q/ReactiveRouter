@@ -1,9 +1,9 @@
 package com.example.reactiverouter.base
 
 /**
- * Set of navigational actions above [Navigator]
+ * Stores, what navigation should be performed above above [Navigator]
  * */
-open class Scope<N : Navigator>(body: (N) -> Unit) : (N) -> Unit {
+class Scope<N : Navigator>(body: (N) -> Unit) : (N) -> Unit {
 	var bodies = mutableListOf<(N) -> Unit>().apply { add(body) }
 
 	/**
