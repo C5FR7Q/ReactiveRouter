@@ -11,9 +11,11 @@ import com.example.reactiverouter.base.ScopeProvider
 class DemoReactiveRouter(fragmentManager: FragmentManager) :
 	ReactiveRouter<DemoReactiveRouter.DemoNavigator, DemoReactiveRouter.DemoScopeProvider>(fragmentManager) {
 
+	override fun createKeyExtractor() = TODO("Not yet implemented")
+	override fun createNavigator() = DemoNavigator()
 	override fun createScopeProvider() = DemoScopeProvider()
 
-	inner class DemoScopeProvider : ScopeProvider<DemoNavigator>(DemoNavigator()) {
+	inner class DemoScopeProvider : ScopeProvider<DemoNavigator>() {
 		fun close() = scope { close() }
 
 		fun replace(fragment: Fragment) = scope {
@@ -34,7 +36,7 @@ class DemoReactiveRouter(fragmentManager: FragmentManager) :
 		//endregion
 	}
 
-	inner class DemoNavigator : Navigator {
+	inner class DemoNavigator : Navigator() {
 		fun close() {
 			fragmentManager.popBackStack()
 		}

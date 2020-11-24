@@ -2,6 +2,7 @@ package com.example.reactiverouter.base
 
 import android.util.Log
 import androidx.fragment.app.FragmentManager
+import com.example.reactiverouter.base.extractor.KeyExtractor
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -12,13 +13,18 @@ import kotlin.math.max
 abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	protected val fragmentManager: FragmentManager
 ) : FragmentManager.OnBackStackChangedListener {
-	private val scopeProvider = createScopeProvider()
+	private val keyExtractor: KeyExtractor by lazy { createKeyExtractor() }
+	private val navigator: N by lazy { createNavigator().apply { keyExtractor = this@ReactiveRouter.keyExtractor } }
+	private val scopeProvider: SP by lazy { createScopeProvider().apply { navigator = this@ReactiveRouter.navigator } }
+
 	private val backStackSubject = BehaviorSubject.createDefault(backStack)
 	private val deferredScopes = mutableListOf<Pair<Scope<N>, BehaviorSubject<Boolean>>>()
 	private val deferredScopesSubject = BehaviorSubject.createDefault(deferredScopes)
 
 	private val subscriptions = CompositeDisposable()
 
+	abstract fun createKeyExtractor(): KeyExtractor
+	abstract fun createNavigator(): N
 	abstract fun createScopeProvider(): SP
 
 	fun attach() {
