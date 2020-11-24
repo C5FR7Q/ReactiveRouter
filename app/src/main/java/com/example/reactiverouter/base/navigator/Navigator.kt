@@ -1,4 +1,4 @@
-package com.example.reactiverouter.base
+package com.example.reactiverouter.base.navigator
 
 import com.example.reactiverouter.base.extractor.TagExtractor
 

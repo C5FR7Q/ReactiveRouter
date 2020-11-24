@@ -1,5 +1,7 @@
 package com.example.reactiverouter.base
 
+import com.example.reactiverouter.base.navigator.Navigator
+
 /**
  * Stores, what navigation should be performed above above [Navigator]
  * */

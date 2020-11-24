@@ -3,9 +3,9 @@ package com.example.reactiverouter.example
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.example.reactiverouter.R
-import com.example.reactiverouter.base.Navigator
+import com.example.reactiverouter.base.navigator.Navigator
 import com.example.reactiverouter.base.ReactiveRouter
-import com.example.reactiverouter.base.ScopeProvider
+import com.example.reactiverouter.base.scopeprovider.ScopeProvider
 import com.example.reactiverouter.base.extractor.SimpleTagExtractor
 
 class DemoReactiveRouter(fragmentManager: FragmentManager) :

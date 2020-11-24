@@ -1,4 +1,7 @@
-package com.example.reactiverouter.base
+package com.example.reactiverouter.base.scopeprovider
+
+import com.example.reactiverouter.base.Scope
+import com.example.reactiverouter.base.navigator.Navigator
 
 /**
  * Should provide all available ready-to-use [Scope]s, that can be used inside of [ReactiveRouter.call]

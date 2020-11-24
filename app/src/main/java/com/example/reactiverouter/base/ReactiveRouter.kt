@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.example.reactiverouter.base.extractor.TagExtractor
+import com.example.reactiverouter.base.navigator.Navigator
+import com.example.reactiverouter.base.scopeprovider.ScopeProvider
 import io.reactivex.Completable
 import io.reactivex.Maybe
 import io.reactivex.Observable
