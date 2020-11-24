@@ -7,13 +7,16 @@ import com.example.reactiverouter.base.Navigator
 import com.example.reactiverouter.base.ReactiveRouter
 import com.example.reactiverouter.base.Scope
 import com.example.reactiverouter.base.ScopeProvider
+import com.example.reactiverouter.base.extractor.SimpleTagExtractor
 
 class DemoReactiveRouter(fragmentManager: FragmentManager) :
 	ReactiveRouter<DemoReactiveRouter.DemoNavigator, DemoReactiveRouter.DemoScopeProvider>(fragmentManager) {
 
+	override fun createTagExtractor() = SimpleTagExtractor()
+	override fun createNavigator() = DemoNavigator()
 	override fun createScopeProvider() = DemoScopeProvider()
 
-	inner class DemoScopeProvider : ScopeProvider<DemoNavigator>(DemoNavigator()) {
+	inner class DemoScopeProvider : ScopeProvider<DemoNavigator>() {
 		fun close() = scope { close() }
 
 		fun replace(fragment: Fragment) = scope {
@@ -34,7 +37,7 @@ class DemoReactiveRouter(fragmentManager: FragmentManager) :
 		//endregion
 	}
 
-	inner class DemoNavigator : Navigator {
+	inner class DemoNavigator : Navigator() {
 		fun close() {
 			fragmentManager.popBackStack()
 		}
