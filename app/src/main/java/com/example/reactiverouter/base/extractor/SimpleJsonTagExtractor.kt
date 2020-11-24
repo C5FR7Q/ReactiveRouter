@@ -7,7 +7,7 @@ import org.json.JSONException
 import org.json.JSONObject
 
 /**
- * SimpleTagExtractor, that adds converted to json arguments to the end of the tag.
+ * [SimpleTagExtractor], that adds converted to json arguments to the end of the tag.
  * Doesn't support collections inside of arguments. Write your own one in case of such need.
  * */
 class SimpleJsonTagExtractor : SimpleTagExtractor() {

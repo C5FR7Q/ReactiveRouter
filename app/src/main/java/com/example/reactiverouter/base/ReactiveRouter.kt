@@ -11,6 +11,9 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.BehaviorSubject
 import kotlin.math.max
 
+/**
+ * Reactive based facade for any navigational actions.
+ * */
 abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	protected val fragmentManager: FragmentManager
 ) : FragmentManager.OnBackStackChangedListener {
@@ -28,16 +31,25 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	abstract fun createNavigator(): N
 	abstract fun createScopeProvider(): SP
 
+	/**
+	 * Attaches [FragmentManager.OnBackStackChangedListener], starts processing [call]
+	 * */
 	fun attach() {
 		fragmentManager.addOnBackStackChangedListener(this)
 		loopDeferredScopes()
 	}
 
+	/**
+	 * Detaches [FragmentManager.OnBackStackChangedListener], stops processing [call]
+	 * */
 	fun detach() {
 		fragmentManager.removeOnBackStackChangedListener(this)
 		subscriptions.dispose()
 	}
 
+	/**
+	 * Entry point of any navigational action. Provide [Scope] that should be processed.
+	 * */
 	fun call(provideScope: SP.() -> Scope<N>) = Completable.defer {
 		val scope = scopeProvider.provideScope()
 		deferScope(scope)
