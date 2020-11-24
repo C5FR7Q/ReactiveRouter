@@ -15,7 +15,7 @@ import kotlin.math.max
 /**
  * Reactive based facade for any navigational actions.
  * */
-abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider>(
+abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	protected val fragmentManager: FragmentManager
 ) : FragmentManager.OnBackStackChangedListener {
 	private val tagExtractor: TagExtractor by lazy { createTagExtractor() }

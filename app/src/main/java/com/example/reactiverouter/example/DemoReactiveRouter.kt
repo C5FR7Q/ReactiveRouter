@@ -5,7 +5,6 @@ import androidx.fragment.app.FragmentManager
 import com.example.reactiverouter.R
 import com.example.reactiverouter.base.Navigator
 import com.example.reactiverouter.base.ReactiveRouter
-import com.example.reactiverouter.base.Scope
 import com.example.reactiverouter.base.ScopeProvider
 import com.example.reactiverouter.base.extractor.SimpleTagExtractor
 
@@ -16,17 +15,14 @@ class DemoReactiveRouter(fragmentManager: FragmentManager) :
 	override fun createNavigator() = DemoNavigator()
 	override fun createScopeProvider() = DemoScopeProvider()
 
-	inner class DemoScopeProvider : ScopeProvider() {
-		fun close() = Scope<DemoNavigator> {
-			it.close()
+	inner class DemoScopeProvider : ScopeProvider<DemoNavigator>() {
+		fun close() = scope { close() }
+		fun replace(fragment: Fragment) = scope {
+			close()
+			show(fragment)
 		}
 
-		fun replace(fragment: Fragment) = Scope<DemoNavigator> {
-			it.close()
-			it.show(fragment)
-		}
-
-		fun show(fragment: Fragment) = Scope<DemoNavigator> { it.show(fragment) }
+		fun show(fragment: Fragment) = scope { show(fragment) }
 	}
 
 	inner class DemoNavigator : Navigator() {
