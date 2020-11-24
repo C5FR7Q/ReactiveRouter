@@ -1,6 +1,7 @@
 package com.example.reactiverouter.base
 
 import android.util.Log
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.example.reactiverouter.base.extractor.TagExtractor
 import io.reactivex.Completable
@@ -40,6 +41,22 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	fun call(provideScope: SP.() -> Scope<N>) = Completable.defer {
 		val scope = scopeProvider.provideScope()
 		deferScope(scope)
+	}
+
+	/**
+	 * IS NOT FOR NAVIGATION! (use similar check inside of [Scope] through [Navigator] instead)
+	 * Checks whether fragment is on the top of [backStack].
+	 * */
+	fun isVisible(fragment: Fragment): Observable<Boolean> = backStackStream.distinctUntilChanged().map {
+		fragmentManager.findFragmentByTag(tagExtractor.extractTagFrom(fragment))?.isVisible ?: false
+	}
+
+	/**
+	 * IS NOT FOR NAVIGATION! (use similar check inside of [Scope] through [Navigator] instead)
+	 * Checks whether fragment is in [backStack].
+	 * */
+	fun isShown(fragment: Fragment): Observable<Boolean> = backStackStream.distinctUntilChanged().map {
+		fragmentManager.findFragmentByTag(tagExtractor.extractTagFrom(fragment)) != null
 	}
 
 	val backStackStream: Observable<List<FragmentManager.BackStackEntry>> = backStackSubject.hide()
