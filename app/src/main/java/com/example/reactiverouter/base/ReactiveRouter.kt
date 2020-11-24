@@ -15,12 +15,12 @@ import kotlin.math.max
 /**
  * Reactive based facade for any navigational actions.
  * */
-abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
+abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider>(
 	protected val fragmentManager: FragmentManager
 ) : FragmentManager.OnBackStackChangedListener {
 	private val tagExtractor: TagExtractor by lazy { createTagExtractor() }
 	private val navigator: N by lazy { createNavigator().apply { tagExtractor = this@ReactiveRouter.tagExtractor } }
-	private val scopeProvider: SP by lazy { createScopeProvider().apply { navigator = this@ReactiveRouter.navigator } }
+	private val scopeProvider: SP by lazy { createScopeProvider() }
 
 	private val backStackSubject = BehaviorSubject.createDefault(backStack)
 	private val deferredScopes = mutableListOf<Pair<Scope<N>, BehaviorSubject<Boolean>>>()
@@ -99,15 +99,16 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			.observeOn(AndroidSchedulers.mainThread())
 			.switchMapMaybe { (scope, subject) ->
 				Log.i("ReactiveRouter", "-------")
-				Log.w("ReactiveRouter", "scope.size = ${scope.deferredActions.size}")
-				if (scope.deferredActions.isEmpty()) {
-					return@switchMapMaybe Maybe.just(subject)
-				}
-				scope.deferredActions.forEach { it() }
-				return@switchMapMaybe backStackStream.onlyNew()
-					.skip(max(0, scope.deferredActions.size - 1).toLong())
-					.map { subject }
-					.firstElement()
+				navigator.startSession()
+				scope.invoke(navigator)
+				val stackChangeActionsCount = navigator.finishSession()
+				Log.w("ReactiveRouter", "scope.size = $stackChangeActionsCount")
+				if (stackChangeActionsCount == 0)
+					Maybe.just(subject) else
+					backStackStream.onlyNew()
+						.skip(max(0, stackChangeActionsCount - 1).toLong())
+						.map { subject }
+						.firstElement()
 			}
 			.subscribe { completeSubject ->
 				completeSubject.onComplete()

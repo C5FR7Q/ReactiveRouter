@@ -16,30 +16,23 @@ class DemoReactiveRouter(fragmentManager: FragmentManager) :
 	override fun createNavigator() = DemoNavigator()
 	override fun createScopeProvider() = DemoScopeProvider()
 
-	inner class DemoScopeProvider : ScopeProvider<DemoNavigator>() {
-		fun close() = scope { close() }
-
-		fun replace(fragment: Fragment) = scope {
-			close()
-			show(fragment)
+	inner class DemoScopeProvider : ScopeProvider() {
+		fun close() = Scope<DemoNavigator> {
+			it.close()
 		}
 
-		fun show(fragment: Fragment) = scope { show(fragment) }
-
-		//region Scope extensions
-		private fun Scope<DemoNavigator>.close() {
-			defer { navigator.close() }
+		fun replace(fragment: Fragment) = Scope<DemoNavigator> {
+			it.close()
+			it.show(fragment)
 		}
 
-		private fun Scope<DemoNavigator>.show(fragment: Fragment) {
-			defer { navigator.show(fragment) }
-		}
-		//endregion
+		fun show(fragment: Fragment) = Scope<DemoNavigator> { it.show(fragment) }
 	}
 
 	inner class DemoNavigator : Navigator() {
 		fun close() {
 			fragmentManager.popBackStack()
+			increaseStackChangeActionsCount()
 		}
 
 		fun show(fragment: Fragment) {
@@ -47,6 +40,7 @@ class DemoReactiveRouter(fragmentManager: FragmentManager) :
 				.replace(R.id.main_container, fragment, fragment.javaClass.simpleName)
 				.addToBackStack(fragment.javaClass.simpleName)
 				.commit()
+			increaseStackChangeActionsCount()
 		}
 	}
 }
