@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.reactiverouter.R
 import com.example.reactiverouter.base.Scope
+import com.example.reactiverouter.base.navigator.SimpleNavigator
 
 class MainActivity : AppCompatActivity() {
 	private var router: DemoReactiveRouter? = null
@@ -30,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 			callWithMessage("replace with DemoFragment2; show DemoFragment3") {
 				replace(DemoFragment2()) + show(DemoFragment3())
 			}
-			call { close() }
+			call { closeCurrent() }
 				.andThen(call { replace(DemoFragment3()) })
 				.andThen(call { show(DemoFragment2()) })
 				.subscribe { Log.v("ReactiveRouter", "Close. THEN replace with DemoFragment3. THEN show DemoFragment2") }
@@ -39,7 +40,7 @@ class MainActivity : AppCompatActivity() {
 
 	private fun DemoReactiveRouter.callWithMessage(
 		message: String,
-		provideScope: DemoReactiveRouter.DemoScopeProvider.() -> Scope<DemoReactiveRouter.DemoNavigator>
+		provideScope: DemoReactiveRouter.DemoScopeProvider.() -> Scope<SimpleNavigator>
 	) {
 		call(provideScope).subscribe { Log.v("ReactiveRouter", message) }
 	}
