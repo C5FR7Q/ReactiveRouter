@@ -13,6 +13,12 @@ class MainActivity : AppCompatActivity() {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
 		router = DemoReactiveRouter(supportFragmentManager)
+		router?.attach()
+	}
+
+	override fun onDestroy() {
+		super.onDestroy()
+		router?.detach()
 	}
 
 	override fun onResume() {
