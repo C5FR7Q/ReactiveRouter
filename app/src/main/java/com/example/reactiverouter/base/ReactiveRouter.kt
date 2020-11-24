@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.example.reactiverouter.base.extractor.TagExtractor
 import io.reactivex.Completable
+import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -99,8 +100,11 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			.switchMapMaybe { (scope, subject) ->
 				Log.i("ReactiveRouter", "-------")
 				Log.w("ReactiveRouter", "scope.size = ${scope.deferredActions.size}")
+				if (scope.deferredActions.isEmpty()) {
+					return@switchMapMaybe Maybe.just(subject)
+				}
 				scope.deferredActions.forEach { it() }
-				backStackStream.onlyNew()
+				return@switchMapMaybe backStackStream.onlyNew()
 					.skip(max(0, scope.deferredActions.size - 1).toLong())
 					.map { subject }
 					.firstElement()
