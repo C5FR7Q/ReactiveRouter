@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
 			call { close() }
 				.andThen(call { replace(DemoFragment3()) })
 				.andThen(call { show(DemoFragment2()) })
-				.subscribe { Log.d("VVA", "Close. THEN replace with DemoFragment3. THEN show DemoFragment2") }
+				.subscribe { Log.v("ReactiveRouter", "Close. THEN replace with DemoFragment3. THEN show DemoFragment2") }
 		}
 	}
 
@@ -41,6 +41,6 @@ class MainActivity : AppCompatActivity() {
 		message: String,
 		provideScope: DemoReactiveRouter.DemoScopeProvider.() -> Scope<DemoReactiveRouter.DemoNavigator>
 	) {
-		call(provideScope).subscribe { Log.d("VVA", message) }
+		call(provideScope).subscribe { Log.v("ReactiveRouter", message) }
 	}
 }

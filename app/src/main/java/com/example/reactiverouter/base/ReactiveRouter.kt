@@ -1,5 +1,6 @@
 package com.example.reactiverouter.base
 
+import android.util.Log
 import androidx.fragment.app.FragmentManager
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -37,7 +38,12 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 
 	val backStackStream: Observable<List<FragmentManager.BackStackEntry>> = backStackSubject.hide()
 
+	init {
+		backStackStream.subscribe { stack -> Log.d("ReactiveRouter", "stack=${stack.map { it.name }}") }
+	}
+
 	final override fun onBackStackChanged() {
+		Log.e("ReactiveRouter", "onBackStackChanged")
 		backStackSubject.onNext(backStack)
 	}
 
@@ -56,6 +62,8 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			.distinctUntilChanged()
 			.observeOn(AndroidSchedulers.mainThread())
 			.switchMapMaybe { (scope, subject) ->
+				Log.i("ReactiveRouter", "-------")
+				Log.w("ReactiveRouter", "scope.size = ${scope.deferredActions.size}")
 				scope.deferredActions.forEach { it() }
 				backStackStream.onlyNew()
 					.skip(max(0, scope.deferredActions.size - 1).toLong())
