@@ -7,11 +7,11 @@ import org.json.JSONException
 import org.json.JSONObject
 
 /**
- * SimpleKeyExtractor, that adds converted to json arguments to the end of the tag.
+ * SimpleTagExtractor, that adds converted to json arguments to the end of the tag.
  * Doesn't support collections inside of arguments. Write your own one in case of such need.
  * */
-class SimpleJsonKeyExtractor : SimpleKeyExtractor() {
-	override fun extractKeyFrom(fragment: Fragment) = "${super.extractKeyFrom(fragment)}_${fragment.arguments.toJson()}"
+class SimpleJsonTagExtractor : SimpleTagExtractor() {
+	override fun extractTagFrom(fragment: Fragment) = "${super.extractTagFrom(fragment)}_${fragment.arguments.toJson()}"
 
 	/* https://stackoverflow.com/a/21859000/7745890 */
 	private fun Bundle?.toJson(): String? {
