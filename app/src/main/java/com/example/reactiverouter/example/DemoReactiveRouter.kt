@@ -7,11 +7,12 @@ import com.example.reactiverouter.base.Navigator
 import com.example.reactiverouter.base.ReactiveRouter
 import com.example.reactiverouter.base.Scope
 import com.example.reactiverouter.base.ScopeProvider
+import com.example.reactiverouter.base.extractor.SimpleKeyExtractor
 
 class DemoReactiveRouter(fragmentManager: FragmentManager) :
 	ReactiveRouter<DemoReactiveRouter.DemoNavigator, DemoReactiveRouter.DemoScopeProvider>(fragmentManager) {
 
-	override fun createKeyExtractor() = TODO("Not yet implemented")
+	override fun createKeyExtractor() = SimpleKeyExtractor()
 	override fun createNavigator() = DemoNavigator()
 	override fun createScopeProvider() = DemoScopeProvider()
 
