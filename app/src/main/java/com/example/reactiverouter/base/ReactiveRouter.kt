@@ -55,14 +55,15 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			.map { it.first() }
 			.distinctUntilChanged()
 			.observeOn(AndroidSchedulers.mainThread())
-			.switchMap { (scope, subject) ->
+			.switchMapMaybe { (scope, subject) ->
 				scope.deferredActions.forEach { it() }
 				backStackStream.onlyNew()
 					.skip(max(0, scope.deferredActions.size - 1).toLong())
 					.map { subject }
+					.firstElement()
 			}
 			.subscribe { completeSubject ->
-				completeSubject.onNext(true)
+				completeSubject.onComplete()
 				deferredScopes.removeAt(0)
 				notifyScopesChanged()
 			}
