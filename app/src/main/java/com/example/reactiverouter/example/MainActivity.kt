@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.reactiverouter.R
-import com.example.reactiverouter.base.scope.Scope
 import com.example.reactiverouter.base.navigator.SimpleNavigator
+import com.example.reactiverouter.base.scope.Scope
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
-		router = DemoReactiveRouter(supportFragmentManager)
+		router = DemoReactiveRouter(supportFragmentManager, DemoScopeProvider())
 		router?.attach(this)
 	}
 
@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
 
 	private fun DemoReactiveRouter.callWithMessage(
 		message: String,
-		provideScope: DemoReactiveRouter.DemoScopeProvider.() -> Scope<SimpleNavigator>
+		provideScope: DemoScopeProvider.() -> Scope<SimpleNavigator>
 	) {
 		call(provideScope).subscribe { Log.v("ReactiveRouter", message) }
 	}
