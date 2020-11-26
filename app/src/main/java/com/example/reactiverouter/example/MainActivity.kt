@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
 
 	override fun onResume() {
 		super.onResume()
-		if (!shown) return
+		if (shown) return
 		shown = true
 		router?.run {
 			callWithMessage("show DemoFragment1") {
