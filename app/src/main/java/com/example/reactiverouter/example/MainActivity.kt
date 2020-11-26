@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.reactiverouter.R
-import com.example.reactiverouter.base.Scope
+import com.example.reactiverouter.base.scope.Scope
 import com.example.reactiverouter.base.navigator.SimpleNavigator
 import java.util.concurrent.TimeUnit
 

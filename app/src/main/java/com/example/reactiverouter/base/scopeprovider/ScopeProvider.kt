@@ -1,6 +1,6 @@
 package com.example.reactiverouter.base.scopeprovider
 
-import com.example.reactiverouter.base.Scope
+import com.example.reactiverouter.base.scope.Scope
 import com.example.reactiverouter.base.navigator.Navigator
 
 /**

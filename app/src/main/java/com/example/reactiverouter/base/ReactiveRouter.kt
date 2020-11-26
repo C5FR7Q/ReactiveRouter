@@ -6,6 +6,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
 import com.example.reactiverouter.base.navigator.Navigator
+import com.example.reactiverouter.base.scope.Scope
 import com.example.reactiverouter.base.scopeprovider.ScopeProvider
 import io.reactivex.Completable
 import io.reactivex.Maybe
