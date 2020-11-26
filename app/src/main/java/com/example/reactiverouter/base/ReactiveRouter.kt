@@ -77,17 +77,19 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			.distinctUntilChanged()
 			.observeOn(AndroidSchedulers.mainThread())
 			.switchMapMaybe { (scope, subject) ->
-				Log.i("ReactiveRouter", "-------")
-				navigator.startSession()
-				scope.invoke(navigator)
-				val stackChangeActionsCount = navigator.finishSession()
-				Log.w("ReactiveRouter", "scope.size = $stackChangeActionsCount")
-				if (stackChangeActionsCount == 0)
-					Maybe.just(subject) else
-					backStackStream.onlyNew()
-						.skip(max(0, stackChangeActionsCount - 1).toLong())
-						.map { subject }
-						.firstElement()
+				Maybe.defer {
+					Log.i("ReactiveRouter", "-------")
+					navigator.startSession()
+					scope.invoke(navigator)
+					val stackChangeActionsCount = navigator.finishSession()
+					Log.w("ReactiveRouter", "scope.size = $stackChangeActionsCount")
+					if (stackChangeActionsCount == 0)
+						Maybe.just(subject) else
+						backStackStream.onlyNew()
+							.skip(max(0, stackChangeActionsCount - 1).toLong())
+							.map { subject }
+							.firstElement()
+				}
 			}
 			.subscribe { completeSubject ->
 				completeSubject.onComplete()
