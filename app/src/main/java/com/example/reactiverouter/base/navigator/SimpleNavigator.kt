@@ -45,8 +45,7 @@ open class SimpleNavigator(
 	}
 
 	open fun showDialog(fragment: DialogFragment) {
-		fragment.show(fragmentManager, tagExtractor.extractTag(fragment))
-		increaseStackChangeActionsCount()
+		fragment.showNow(fragmentManager, tagExtractor.extractTag(fragment))
 	}
 
 	open fun changeRoot(fragment: Fragment) {
