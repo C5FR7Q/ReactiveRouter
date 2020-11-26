@@ -48,6 +48,8 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 
 	protected val backStackChangeEvent: Observable<Boolean> = _backStackChangeEvent.hide()
 
+	private var scopeInExecution: Scope.Simple<N>? = null
+
 	/**
 	 * Attaches [FragmentManager.OnBackStackChangedListener], starts processing [call]
 	 * */
@@ -102,6 +104,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			.observeOn(AndroidSchedulers.mainThread())
 			.switchMapMaybe { (scope, subject) ->
 				Maybe.defer {
+					scopeInExecution = scope
 					navigator.startSession()
 					scope.invoke(navigator)
 					val stackChangeActionsCount = navigator.finishSession()
@@ -113,13 +116,17 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 							.firstElement()
 				}.let { maybe ->
 					when (stateLossStrategy) {
-						StateLossStrategy.POSTPONE -> maybe.onErrorComplete()
+						StateLossStrategy.POSTPONE -> {
+							scopeInExecution = null
+							maybe.onErrorComplete()
+						}
 						StateLossStrategy.IGNORE -> maybe.onErrorReturnItem(subject)
 						StateLossStrategy.ERROR -> maybe
 					}
 				}
 			}
 			.subscribe { completeSubject ->
+				scopeInExecution = null
 				completeSubject.onComplete()
 				deferredScopes.removeAt(0)
 				notifyScopesChanged()
@@ -129,9 +136,15 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 
 	private fun deferScope(scope: Scope.Simple<N>): Completable {
 		val subject = BehaviorSubject.create<Boolean>()
-		deferredScopes.add(scope to subject)
+		val deferredScope = scope to subject
+		deferredScopes.add(deferredScope)
 		notifyScopesChanged()
-		return subject.ignoreElements()
+		return subject.ignoreElements().doOnDispose {
+			if (scopeInExecution != scope) {
+				deferredScopes.remove(deferredScope)
+				notifyScopesChanged()
+			}
+		}
 	}
 
 	private fun notifyScopesChanged() {

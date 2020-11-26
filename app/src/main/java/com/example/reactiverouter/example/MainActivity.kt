@@ -29,6 +29,19 @@ class MainActivity : AppCompatActivity() {
 		if (shown) return
 		shown = true
 		router?.run {
+			call { show(DemoFragment1()) }.subscribe()
+			callWithMessage("show DemoFragment1") {
+				show(DemoFragment1())
+			}
+			callWithMessage("show DemoFragment1") {
+				show(DemoFragment1())
+			}
+			callWithMessage("show DemoFragment1") {
+				show(DemoFragment1())
+			}
+			callWithMessage("show DemoFragment1") {
+				show(DemoFragment1())
+			}
 			callWithMessage("show DemoFragment1") {
 				show(DemoFragment1())
 			}
@@ -51,6 +64,7 @@ class MainActivity : AppCompatActivity() {
 		message: String,
 		provideScope: DemoScopeProvider.() -> Scope.Simple<SimpleNavigator>
 	) {
-		call(provideScope).subscribe { Log.v("ReactiveRouter", message) }
+		val subscription = call(provideScope).subscribe { Log.v("ReactiveRouter", message) }
+		subscription.dispose()
 	}
 }
