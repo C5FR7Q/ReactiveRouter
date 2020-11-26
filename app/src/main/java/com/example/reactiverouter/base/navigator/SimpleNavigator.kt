@@ -12,10 +12,10 @@ open class SimpleNavigator(protected val fragmentManager: FragmentManager) : Nav
 		}
 	}
 
-	open fun closeUntil(fragment: Fragment, inclusive: Boolean) {
-		if (isShown(fragment)) {
+	open fun closeUntil(tagSource: Any, inclusive: Boolean) {
+		if (isShown(tagSource)) {
 			fragmentManager.popBackStack(
-				tagExtractor.extractTagFrom(fragment),
+				tagExtractor.extractTag(tagSource),
 				if (inclusive) FragmentManager.POP_BACK_STACK_INCLUSIVE else 0
 			)
 			increaseStackChangeActionsCount()
@@ -47,7 +47,7 @@ open class SimpleNavigator(protected val fragmentManager: FragmentManager) : Nav
 		show(fragment)
 	}
 
-	open fun isShown(fragment: Fragment) = fragmentManager.findFragmentByTag(tagExtractor.extractTagFrom(fragment)) != null
+	open fun isShown(tagSource: Any) = fragmentManager.findFragmentByTag(tagExtractor.extractTag(tagSource)) != null
 
-	open fun isVisible(fragment: Fragment) = fragmentManager.findFragmentByTag(tagExtractor.extractTagFrom(fragment))?.isVisible ?: false
+	open fun isVisible(tagSource: Any) = fragmentManager.findFragmentByTag(tagExtractor.extractTag(tagSource))?.isVisible ?: false
 }

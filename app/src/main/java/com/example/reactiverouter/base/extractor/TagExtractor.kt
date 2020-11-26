@@ -1,10 +1,10 @@
 package com.example.reactiverouter.base.extractor
 
-import androidx.fragment.app.Fragment
-
 /**
- * Represents [Fragment] as [String] tag
+ * Represents [Any] as [String] tag
  * */
-interface TagExtractor {
-	fun extractTagFrom(fragment: Fragment): String
+abstract class TagExtractor {
+	open fun extractTag(source: Any): String {
+		throw RuntimeException("${javaClass.name} doesn't support ${source.javaClass.name}")
+	}
 }
