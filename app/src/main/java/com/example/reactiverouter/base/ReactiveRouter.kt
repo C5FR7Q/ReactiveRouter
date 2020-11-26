@@ -70,9 +70,11 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	 * Entry point of any navigational action. Provide [Scope] that should be processed.
 	 * */
 	fun <T> call(provideScope: SP.() -> Scope<T, N>): Completable {
-		return when (val scope = scopeProvider.provideScope()) {
-			is Scope.Simple -> deferScope(scope)
-			is Scope.Reactive -> deferReactiveScope(scope)
+		return Completable.defer {
+			when (val scope = scopeProvider.provideScope()) {
+				is Scope.Simple -> deferScope(scope)
+				is Scope.Reactive -> deferReactiveScope(scope)
+			}
 		}
 	}
 
