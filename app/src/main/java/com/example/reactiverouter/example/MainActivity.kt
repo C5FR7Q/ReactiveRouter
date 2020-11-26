@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
-		router = DemoReactiveRouter(supportFragmentManager, DemoScopeProvider())
+		router = DemoReactiveRouter(supportFragmentManager, DemoScopeProvider(SomeProvider()))
 		router?.attach(this)
 	}
 
@@ -40,6 +40,10 @@ class MainActivity : AppCompatActivity() {
 				.delay(5, TimeUnit.SECONDS)
 				.andThen(call { show(DemoFragment2()) })
 				.subscribe { Log.v("ReactiveRouter", "Close. THEN replace with DemoFragment3. THEN show DemoFragment2") }
+
+			callReactive { showDemo2IfNeed() }.subscribe {
+				Log.v("ReactiveRouter", "showDemo2IfNeedCompleted")
+			}
 		}
 	}
 

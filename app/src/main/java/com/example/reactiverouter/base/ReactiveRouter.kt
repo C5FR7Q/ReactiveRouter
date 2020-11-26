@@ -6,6 +6,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
 import com.example.reactiverouter.base.navigator.Navigator
+import com.example.reactiverouter.base.scope.ReactiveScope
 import com.example.reactiverouter.base.scope.Scope
 import com.example.reactiverouter.base.scopeprovider.ScopeProvider
 import io.reactivex.Completable
@@ -70,6 +71,21 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	fun call(provideScope: SP.() -> Scope<N>) = Completable.defer {
 		val scope = scopeProvider.provideScope()
 		deferScope(scope)
+	}
+
+	/**
+	 * Entry point of any reactive-based navigational action. Provide [Scope] that should be processed.
+	 * */
+	fun <T> callReactive(provideReactiveScope: SP.() -> ReactiveScope<T, N>) = Completable.defer {
+		val reactiveScope = scopeProvider.provideReactiveScope()
+		reactiveScope.stream.flatMapCompletable {
+			val scope: Scope<N>? = reactiveScope.scopeProvider.invoke(it)
+			if (scope != null) {
+				deferScope(scope)
+			} else {
+				Completable.complete()
+			}
+		}
 	}
 
 	final override fun onBackStackChanged() {
