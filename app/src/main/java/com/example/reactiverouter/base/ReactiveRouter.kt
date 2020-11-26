@@ -119,11 +119,6 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 						StateLossStrategy.IGNORE -> maybe.onErrorReturnItem(subject)
 						StateLossStrategy.ERROR -> maybe
 					}
-					if (stateLossStrategy == StateLossStrategy.IGNORE) {
-						maybe.onErrorReturnItem(subject)
-					} else {
-						maybe
-					}
 				}
 			}
 			.subscribe { completeSubject ->
