@@ -4,6 +4,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.example.reactiverouter.R
 import com.example.reactiverouter.base.ReactiveRouter
+import com.example.reactiverouter.base.StateLossStrategy
 import com.example.reactiverouter.base.extractor.SimpleTagExtractor
 import com.example.reactiverouter.base.navigator.SimpleNavigator
 import com.example.reactiverouter.base.scopeprovider.SimpleScopeProvider
@@ -12,7 +13,8 @@ class DemoReactiveRouter(fragmentManager: FragmentManager) :
 	ReactiveRouter<SimpleNavigator, DemoReactiveRouter.DemoScopeProvider>(
 		SimpleNavigator(R.id.main_container, SimpleTagExtractor(), fragmentManager),
 		DemoScopeProvider(),
-		fragmentManager
+		fragmentManager,
+		StateLossStrategy.POSTPONE
 	) {
 
 	class DemoScopeProvider : SimpleScopeProvider<SimpleNavigator>() {

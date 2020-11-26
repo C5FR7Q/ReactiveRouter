@@ -2,6 +2,10 @@ package com.example.reactiverouter.base
 
 import android.util.Log
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.OnLifecycleEvent
 import com.example.reactiverouter.base.navigator.Navigator
 import com.example.reactiverouter.base.scopeprovider.ScopeProvider
 import io.reactivex.Completable
@@ -18,19 +22,34 @@ import kotlin.math.max
 abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	protected val navigator: N,
 	private val scopeProvider: SP,
-	private val fragmentManager: FragmentManager
+	private val fragmentManager: FragmentManager,
+	private val stateLossStrategy: StateLossStrategy = StateLossStrategy.ERROR
 ) : FragmentManager.OnBackStackChangedListener {
 
 	private val backStackSubject = BehaviorSubject.createDefault(backStack)
 	private val deferredScopes = mutableListOf<Pair<Scope<N>, BehaviorSubject<Boolean>>>()
 	private val deferredScopesSubject = BehaviorSubject.createDefault(deferredScopes)
+	private val isResumedSubject = BehaviorSubject.createDefault(false)
 
 	private val subscriptions = CompositeDisposable()
+
+	private val recycleObserver = object : LifecycleObserver {
+		@OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+		fun onResume() {
+			isResumedSubject.onNext(true)
+		}
+
+		@OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+		fun onPause() {
+			isResumedSubject.onNext(false)
+		}
+	}
 
 	/**
 	 * Attaches [FragmentManager.OnBackStackChangedListener], starts processing [call]
 	 * */
-	fun attach() {
+	fun attach(lifecycleOwner: LifecycleOwner) {
+		lifecycleOwner.lifecycle.addObserver(recycleObserver)
 		fragmentManager.addOnBackStackChangedListener(this)
 		loopDeferredScopes()
 	}
@@ -38,7 +57,8 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	/**
 	 * Detaches [FragmentManager.OnBackStackChangedListener], stops processing [call]
 	 * */
-	fun detach() {
+	fun detach(lifecycleOwner: LifecycleOwner) {
+		lifecycleOwner.lifecycle.removeObserver(recycleObserver)
 		fragmentManager.removeOnBackStackChangedListener(this)
 		subscriptions.dispose()
 	}
@@ -71,7 +91,19 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		}
 
 	private fun loopDeferredScopes() {
-		deferredScopesSubject
+		deferredScopesSubject.let { subject ->
+			if (stateLossStrategy == StateLossStrategy.POSTPONE) {
+				isResumedSubject.distinctUntilChanged().switchMap { isResumed ->
+					if (isResumed) {
+						subject
+					} else {
+						Observable.empty<List<Pair<Scope<N>, BehaviorSubject<Boolean>>>>()
+					}
+				}
+			} else {
+				subject
+			}
+		}
 			.filter { it.isNotEmpty() }
 			.map { it.first() }
 			.distinctUntilChanged()
@@ -89,6 +121,17 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 							.skip(max(0, stackChangeActionsCount - 1).toLong())
 							.map { subject }
 							.firstElement()
+				}.let { maybe ->
+					when (stateLossStrategy) {
+						StateLossStrategy.POSTPONE -> maybe.onErrorComplete()
+						StateLossStrategy.IGNORE -> maybe.onErrorReturnItem(subject)
+						StateLossStrategy.ERROR -> maybe
+					}
+					if (stateLossStrategy == StateLossStrategy.IGNORE) {
+						maybe.onErrorReturnItem(subject)
+					} else {
+						maybe
+					}
 				}
 			}
 			.subscribe { completeSubject ->
