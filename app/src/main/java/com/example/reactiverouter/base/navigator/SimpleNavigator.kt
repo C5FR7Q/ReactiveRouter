@@ -1,10 +1,14 @@
 package com.example.reactiverouter.base.navigator
 
+import androidx.annotation.IdRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import com.example.reactiverouter.R
 
-open class SimpleNavigator(protected val fragmentManager: FragmentManager) : Navigator() {
+open class SimpleNavigator(
+	protected val fragmentManager: FragmentManager,
+	@IdRes
+	private val containerId: Int
+) : Navigator() {
 	open fun close() {
 		if (fragmentManager.backStackEntryCount > 0) {
 			fragmentManager.popBackStack()
@@ -31,7 +35,7 @@ open class SimpleNavigator(protected val fragmentManager: FragmentManager) : Nav
 
 	open fun show(fragment: Fragment) {
 		fragmentManager.beginTransaction()
-			.replace(R.id.main_container, fragment, fragment.javaClass.simpleName)
+			.replace(containerId, fragment, fragment.javaClass.simpleName)
 			.addToBackStack(fragment.javaClass.simpleName)
 			.commit()
 		increaseStackChangeActionsCount()

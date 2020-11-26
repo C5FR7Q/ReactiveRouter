@@ -2,6 +2,7 @@ package com.example.reactiverouter.example
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import com.example.reactiverouter.R
 import com.example.reactiverouter.base.ReactiveRouter
 import com.example.reactiverouter.base.extractor.SimpleTagExtractor
 import com.example.reactiverouter.base.navigator.SimpleNavigator
@@ -11,7 +12,7 @@ class DemoReactiveRouter(fragmentManager: FragmentManager) :
 	ReactiveRouter<SimpleNavigator, DemoReactiveRouter.DemoScopeProvider>(fragmentManager) {
 
 	override fun createTagExtractor() = SimpleTagExtractor()
-	override fun createNavigator() = SimpleNavigator(fragmentManager)
+	override fun createNavigator() = SimpleNavigator(fragmentManager, R.id.main_container)
 	override fun createScopeProvider() = DemoScopeProvider()
 
 	inner class DemoScopeProvider : SimpleScopeProvider<SimpleNavigator>() {
