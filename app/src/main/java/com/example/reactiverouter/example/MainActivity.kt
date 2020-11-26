@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
 				.andThen(call { show(DemoFragment2()) })
 				.subscribe { Log.v("ReactiveRouter", "Close. THEN replace with DemoFragment3. THEN show DemoFragment2") }
 
-			callReactive { showDemo2IfNeed() }.subscribe {
+			call { showDemo2IfNeed() }.subscribe {
 				Log.v("ReactiveRouter", "showDemo2IfNeedCompleted")
 			}
 		}
@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
 
 	private fun DemoReactiveRouter.callWithMessage(
 		message: String,
-		provideScope: DemoScopeProvider.() -> Scope<SimpleNavigator>
+		provideScope: DemoScopeProvider.() -> Scope.Simple<SimpleNavigator>
 	) {
 		call(provideScope).subscribe { Log.v("ReactiveRouter", message) }
 	}

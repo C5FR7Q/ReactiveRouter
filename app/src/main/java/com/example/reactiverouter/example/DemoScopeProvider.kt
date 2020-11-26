@@ -15,7 +15,7 @@ class DemoScopeProvider(
 
 	fun show(fragment: Fragment) = scope { show(fragment) }
 
-	fun showDemo2IfNeed() = reactiveScope(someProvider.shouldDoSomething) { shouldShow ->
+	fun showDemo2IfNeed() = scope(someProvider.shouldDoSomething) { shouldShow ->
 		Log.d("ReactiveRouter", "showDemo2:$shouldShow")
 		if (shouldShow) {
 			scope {
