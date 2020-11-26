@@ -5,9 +5,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 
 open class SimpleNavigator(
-	protected val fragmentManager: FragmentManager,
 	@IdRes
-	private val containerId: Int
+	private val containerId: Int,
+	protected val fragmentManager: FragmentManager
 ) : Navigator() {
 	open fun close() {
 		if (fragmentManager.backStackEntryCount > 0) {
