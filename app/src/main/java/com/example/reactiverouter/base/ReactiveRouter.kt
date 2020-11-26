@@ -27,7 +27,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	private val stateLossStrategy: StateLossStrategy = StateLossStrategy.ERROR
 ) : FragmentManager.OnBackStackChangedListener {
 
-	private val backStackChangeEvent = PublishSubject.create<Boolean>()
+	private val _backStackChangeEvent = PublishSubject.create<Boolean>()
 	private val deferredScopes = mutableListOf<Pair<Scope.Simple<N>, BehaviorSubject<Boolean>>>()
 	private val deferredScopesSubject = BehaviorSubject.createDefault(deferredScopes)
 	private val isResumedSubject = BehaviorSubject.createDefault(false)
@@ -45,6 +45,8 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			isResumedSubject.onNext(false)
 		}
 	}
+
+	protected val backStackChangeEvent: Observable<Boolean> = _backStackChangeEvent.hide()
 
 	/**
 	 * Attaches [FragmentManager.OnBackStackChangedListener], starts processing [call]
@@ -75,7 +77,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	}
 
 	final override fun onBackStackChanged() {
-		backStackChangeEvent.onNext(true)
+		_backStackChangeEvent.onNext(true)
 	}
 
 	private fun loopDeferredScopes() {
