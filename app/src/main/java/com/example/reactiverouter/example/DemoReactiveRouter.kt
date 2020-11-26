@@ -9,12 +9,13 @@ import com.example.reactiverouter.base.navigator.SimpleNavigator
 import com.example.reactiverouter.base.scopeprovider.SimpleScopeProvider
 
 class DemoReactiveRouter(fragmentManager: FragmentManager) :
-	ReactiveRouter<SimpleNavigator, DemoReactiveRouter.DemoScopeProvider>(fragmentManager) {
+	ReactiveRouter<SimpleNavigator, DemoReactiveRouter.DemoScopeProvider>(
+		SimpleNavigator(R.id.main_container, SimpleTagExtractor(), fragmentManager),
+		DemoScopeProvider(),
+		fragmentManager
+	) {
 
-	override fun createNavigator() = SimpleNavigator(R.id.main_container, SimpleTagExtractor(), fragmentManager)
-	override fun createScopeProvider() = DemoScopeProvider()
-
-	inner class DemoScopeProvider : SimpleScopeProvider<SimpleNavigator>() {
+	class DemoScopeProvider : SimpleScopeProvider<SimpleNavigator>() {
 		fun replace(fragment: Fragment) = scope {
 			close()
 			show(fragment)

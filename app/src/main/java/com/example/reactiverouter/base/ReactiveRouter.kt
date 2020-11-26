@@ -16,19 +16,16 @@ import kotlin.math.max
  * Reactive based facade for any navigational actions.
  * */
 abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
-	protected val fragmentManager: FragmentManager
+	protected val navigator: N,
+	private val scopeProvider: SP,
+	private val fragmentManager: FragmentManager
 ) : FragmentManager.OnBackStackChangedListener {
-	private val navigator: N by lazy { createNavigator() }
-	private val scopeProvider: SP by lazy { createScopeProvider() }
 
 	private val backStackSubject = BehaviorSubject.createDefault(backStack)
 	private val deferredScopes = mutableListOf<Pair<Scope<N>, BehaviorSubject<Boolean>>>()
 	private val deferredScopesSubject = BehaviorSubject.createDefault(deferredScopes)
 
 	private val subscriptions = CompositeDisposable()
-
-	abstract fun createNavigator(): N
-	abstract fun createScopeProvider(): SP
 
 	/**
 	 * Attaches [FragmentManager.OnBackStackChangedListener], starts processing [call]
