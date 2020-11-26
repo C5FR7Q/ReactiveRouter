@@ -13,6 +13,7 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.subjects.PublishSubject
 import kotlin.math.max
 
 /**
@@ -25,7 +26,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	private val stateLossStrategy: StateLossStrategy = StateLossStrategy.ERROR
 ) : FragmentManager.OnBackStackChangedListener {
 
-	private val backStackSubject = BehaviorSubject.createDefault(backStack)
+	private val backStackChangeEvent = PublishSubject.create<Boolean>()
 	private val deferredScopes = mutableListOf<Pair<Scope<N>, BehaviorSubject<Boolean>>>()
 	private val deferredScopesSubject = BehaviorSubject.createDefault(deferredScopes)
 	private val isResumedSubject = BehaviorSubject.createDefault(false)
@@ -70,19 +71,9 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		deferScope(scope)
 	}
 
-	val backStackStream: Observable<List<FragmentManager.BackStackEntry>> = backStackSubject.hide()
-
 	final override fun onBackStackChanged() {
-		backStackSubject.onNext(backStack)
+		backStackChangeEvent.onNext(true)
 	}
-
-	private val backStack: List<FragmentManager.BackStackEntry>
-		get() = mutableListOf<FragmentManager.BackStackEntry>().apply {
-			val backStackSize = fragmentManager.backStackEntryCount
-			for (i in 0 until backStackSize) {
-				add(fragmentManager.getBackStackEntryAt(i))
-			}
-		}
 
 	private fun loopDeferredScopes() {
 		deferredScopesSubject.let { subject ->
@@ -109,7 +100,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 					val stackChangeActionsCount = navigator.finishSession()
 					if (stackChangeActionsCount == 0)
 						Maybe.just(subject) else
-						backStackStream.onlyNew()
+						backStackChangeEvent
 							.skip(max(0, stackChangeActionsCount - 1).toLong())
 							.map { subject }
 							.firstElement()
