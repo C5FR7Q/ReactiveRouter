@@ -1,9 +1,7 @@
 package com.example.reactiverouter.base
 
 import android.util.Log
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import com.example.reactiverouter.base.extractor.TagExtractor
 import com.example.reactiverouter.base.navigator.Navigator
 import com.example.reactiverouter.base.scopeprovider.ScopeProvider
 import io.reactivex.Completable
@@ -20,8 +18,7 @@ import kotlin.math.max
 abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	protected val fragmentManager: FragmentManager
 ) : FragmentManager.OnBackStackChangedListener {
-	private val tagExtractor: TagExtractor by lazy { createTagExtractor() }
-	private val navigator: N by lazy { createNavigator().apply { tagExtractor = this@ReactiveRouter.tagExtractor } }
+	private val navigator: N by lazy { createNavigator() }
 	private val scopeProvider: SP by lazy { createScopeProvider() }
 
 	private val backStackSubject = BehaviorSubject.createDefault(backStack)
@@ -30,7 +27,6 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 
 	private val subscriptions = CompositeDisposable()
 
-	abstract fun createTagExtractor(): TagExtractor
 	abstract fun createNavigator(): N
 	abstract fun createScopeProvider(): SP
 
@@ -56,22 +52,6 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	fun call(provideScope: SP.() -> Scope<N>) = Completable.defer {
 		val scope = scopeProvider.provideScope()
 		deferScope(scope)
-	}
-
-	/**
-	 * IS NOT FOR NAVIGATION! (use similar check inside of [Scope] through [Navigator] instead)
-	 * Checks whether fragment is on the top of [backStack].
-	 * */
-	fun isVisible(fragment: Fragment): Observable<Boolean> = backStackStream.distinctUntilChanged().map {
-		fragmentManager.findFragmentByTag(tagExtractor.extractTagFrom(fragment))?.isVisible ?: false
-	}
-
-	/**
-	 * IS NOT FOR NAVIGATION! (use similar check inside of [Scope] through [Navigator] instead)
-	 * Checks whether fragment is in [backStack].
-	 * */
-	fun isShown(fragment: Fragment): Observable<Boolean> = backStackStream.distinctUntilChanged().map {
-		fragmentManager.findFragmentByTag(tagExtractor.extractTagFrom(fragment)) != null
 	}
 
 	val backStackStream: Observable<List<FragmentManager.BackStackEntry>> = backStackSubject.hide()

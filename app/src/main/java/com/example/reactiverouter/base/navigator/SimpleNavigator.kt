@@ -3,10 +3,12 @@ package com.example.reactiverouter.base.navigator
 import androidx.annotation.IdRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import com.example.reactiverouter.base.extractor.TagExtractor
 
 open class SimpleNavigator(
 	@IdRes
 	private val containerId: Int,
+	private val tagExtractor: TagExtractor,
 	protected val fragmentManager: FragmentManager
 ) : Navigator() {
 	open fun close() {

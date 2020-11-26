@@ -11,8 +11,7 @@ import com.example.reactiverouter.base.scopeprovider.SimpleScopeProvider
 class DemoReactiveRouter(fragmentManager: FragmentManager) :
 	ReactiveRouter<SimpleNavigator, DemoReactiveRouter.DemoScopeProvider>(fragmentManager) {
 
-	override fun createTagExtractor() = SimpleTagExtractor()
-	override fun createNavigator() = SimpleNavigator(R.id.main_container, fragmentManager)
+	override fun createNavigator() = SimpleNavigator(R.id.main_container, SimpleTagExtractor(), fragmentManager)
 	override fun createScopeProvider() = DemoScopeProvider()
 
 	inner class DemoScopeProvider : SimpleScopeProvider<SimpleNavigator>() {
