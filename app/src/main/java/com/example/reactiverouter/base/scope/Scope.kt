@@ -27,4 +27,18 @@ sealed class Scope<T, N : Navigator> {
 		val stream: Single<T>,
 		val scopeProvider: (T) -> Simple<N>?
 	) : Scope<T, N>()
+
+	class Chain<N : Navigator>(
+		scopes: List<Scope<*, N>>
+	) : Scope<Any, N>() {
+		var scopes = mutableListOf<Scope<*, N>>().apply { addAll(scopes) }
+
+		/**
+		 * Contacts [Chain]
+		 * */
+		infix operator fun plus(chain: Chain<N>): Chain<N> {
+			scopes.addAll(chain.scopes)
+			return this
+		}
+	}
 }

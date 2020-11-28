@@ -72,12 +72,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	 * Entry point of any navigational action. Provide [Scope] that should be processed.
 	 * */
 	fun <T> call(provideScope: SP.() -> Scope<T, N>): Completable {
-		return Completable.defer {
-			when (val scope = scopeProvider.provideScope()) {
-				is Scope.Simple -> deferScope(scope)
-				is Scope.Reactive -> deferReactiveScope(scope)
-			}
-		}
+		return deferScope(scopeProvider.provideScope())
 	}
 
 	final override fun onBackStackChanged() {
@@ -139,7 +134,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			.also { subscriptions.add(it) }
 	}
 
-	private fun deferScope(scope: Scope.Simple<N>): Completable {
+	private fun deferSimpleScope(scope: Scope.Simple<N>): Completable {
 		val subject = BehaviorSubject.create<Boolean>()
 		val deferredScope = scope to subject
 		deferredScopes.add(deferredScope)
@@ -160,9 +155,36 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		return reactiveScope.stream.flatMapCompletable {
 			val scope: Scope.Simple<N>? = reactiveScope.scopeProvider.invoke(it)
 			if (scope != null) {
-				deferScope(scope)
+				deferSimpleScope(scope)
 			} else {
 				Completable.complete()
+			}
+		}
+	}
+
+	private fun deferChainScope(chain: Scope.Chain<N>): Completable {
+		val scopes = chain.scopes
+		if (scopes.isEmpty()) {
+			return Completable.complete()
+		}
+		var completable: Completable? = null
+		for (i in 0 until scopes.size) {
+			val nextCompletable = deferScope(scopes[i])
+			completable = if (completable == null) {
+				nextCompletable
+			} else {
+				completable.andThen(nextCompletable)
+			}
+		}
+		return completable!!
+	}
+
+	private fun <T> deferScope(scope: Scope<T, N>): Completable {
+		return Completable.defer {
+			when (scope) {
+				is Scope.Simple -> deferSimpleScope(scope)
+				is Scope.Reactive -> deferReactiveScope(scope)
+				is Scope.Chain -> deferChainScope(scope)
 			}
 		}
 	}
