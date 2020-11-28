@@ -163,9 +163,9 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 
 	private fun <T> deferReactiveScope(reactiveScope: Scope.Reactive<T, N>): Completable {
 		return reactiveScope.stream.flatMapCompletable {
-			val scope: Scope.Simple<N>? = reactiveScope.scopeProvider.invoke(it)
+			val scope: Scope<*, N>? = reactiveScope.scopeProvider.invoke(it)
 			if (scope != null) {
-				deferSimpleScope(scope)
+				deferScope(scope)
 			} else {
 				Completable.complete()
 			}

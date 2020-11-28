@@ -25,7 +25,7 @@ sealed class Scope<T, N : Navigator> {
 
 	class Reactive<T, N : Navigator>(
 		val stream: Single<T>,
-		val scopeProvider: (T) -> Simple<N>?
+		val scopeProvider: (T) -> Scope<*, N>?
 	) : Scope<T, N>()
 
 	class Chain<N : Navigator>(
