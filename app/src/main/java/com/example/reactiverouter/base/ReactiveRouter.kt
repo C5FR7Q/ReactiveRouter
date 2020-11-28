@@ -125,6 +125,11 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 					}
 				}
 			}
+			.doOnDispose {
+				scopeInExecution = null
+				deferredScopes.clear()
+				notifyScopesChanged()
+			}
 			.subscribe { completeSubject ->
 				scopeInExecution = null
 				completeSubject.onComplete()
