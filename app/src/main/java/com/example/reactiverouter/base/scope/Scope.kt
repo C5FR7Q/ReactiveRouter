@@ -8,7 +8,7 @@ import io.reactivex.Single
  * */
 sealed class Scope<T, N : Navigator> {
 	class Simple<N : Navigator>(body: (N) -> Unit) : (N) -> Unit, Scope<Nothing, N>() {
-		var bodies = mutableListOf<(N) -> Unit>().apply { add(body) }
+		private var bodies = mutableListOf<(N) -> Unit>().apply { add(body) }
 
 		/**
 		 * Contacts [Simple]
@@ -31,13 +31,14 @@ sealed class Scope<T, N : Navigator> {
 	class Chain<N : Navigator>(
 		scopes: List<Scope<*, N>>
 	) : Scope<Any, N>() {
-		var scopes = mutableListOf<Scope<*, N>>().apply { addAll(scopes) }
+		var scopes = scopes
+			private set
 
 		/**
 		 * Contacts [Chain]
 		 * */
 		infix operator fun plus(chain: Chain<N>): Chain<N> {
-			scopes.addAll(chain.scopes)
+			scopes = scopes.toMutableList().apply { addAll(chain.scopes) }
 			return this
 		}
 	}
