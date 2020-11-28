@@ -10,5 +10,5 @@ import io.reactivex.Single
 abstract class ScopeProvider<N : Navigator> {
 	protected fun scope(scopeBody: N.() -> Unit) = Scope.Simple<N> { it.scopeBody() }
 	protected fun <T> scope(stream: Single<T>, scopeProvider: (T) -> Scope.Simple<N>?) = Scope.Reactive(stream, scopeProvider)
-	protected fun chain(vararg scopes: Scope<*, N>) = Scope.Chain(scopes.toList())
+	protected fun scope(vararg scopes: Scope<*, N>) = Scope.Chain(scopes.toList())
 }

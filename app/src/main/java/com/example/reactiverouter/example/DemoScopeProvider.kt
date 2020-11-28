@@ -24,5 +24,5 @@ class DemoScopeProvider(
 		} else null
 	}
 
-	fun chainOfDemo2AndDemo3() = chain(showDemo2IfNeed(), show(DemoFragment3()))
+	fun chainOfDemo2AndDemo3() = scope(showDemo2IfNeed(), show(DemoFragment3()))
 }
