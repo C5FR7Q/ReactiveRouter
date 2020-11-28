@@ -134,6 +134,20 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			.also { subscriptions.add(it) }
 	}
 
+	private fun notifyScopesChanged() {
+		deferredScopesSubject.onNext(deferredScopes)
+	}
+
+	private fun <T> deferScope(scope: Scope<T, N>): Completable {
+		return Completable.defer {
+			when (scope) {
+				is Scope.Simple -> deferSimpleScope(scope)
+				is Scope.Reactive -> deferReactiveScope(scope)
+				is Scope.Chain -> deferChainScope(scope)
+			}
+		}
+	}
+
 	private fun deferSimpleScope(scope: Scope.Simple<N>): Completable {
 		val subject = BehaviorSubject.create<Boolean>()
 		val deferredScope = scope to subject
@@ -145,10 +159,6 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 				notifyScopesChanged()
 			}
 		}
-	}
-
-	private fun notifyScopesChanged() {
-		deferredScopesSubject.onNext(deferredScopes)
 	}
 
 	private fun <T> deferReactiveScope(reactiveScope: Scope.Reactive<T, N>): Completable {
@@ -177,15 +187,5 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			}
 		}
 		return completable!!
-	}
-
-	private fun <T> deferScope(scope: Scope<T, N>): Completable {
-		return Completable.defer {
-			when (scope) {
-				is Scope.Simple -> deferSimpleScope(scope)
-				is Scope.Reactive -> deferReactiveScope(scope)
-				is Scope.Chain -> deferChainScope(scope)
-			}
-		}
 	}
 }
