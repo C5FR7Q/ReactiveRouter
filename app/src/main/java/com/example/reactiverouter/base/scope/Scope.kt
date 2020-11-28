@@ -7,7 +7,7 @@ import io.reactivex.Single
  * Stores, what navigation should be performed above above [Navigator]
  * */
 sealed class Scope<T, N : Navigator> {
-	class Simple<N : Navigator>(body: (N) -> Unit) : (N) -> Unit, Scope<String, N>() {
+	class Simple<N : Navigator>(body: (N) -> Unit) : (N) -> Unit, Scope<Nothing, N>() {
 		var bodies = mutableListOf<(N) -> Unit>().apply { add(body) }
 
 		/**
