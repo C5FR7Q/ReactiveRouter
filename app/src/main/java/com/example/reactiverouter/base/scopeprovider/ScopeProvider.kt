@@ -59,41 +59,41 @@ abstract class ScopeProvider<N : Navigator> {
 
 
 	//region Chain
-	protected fun <T> chain(
+	protected fun chain(
 		terminateOnObsolete: Boolean,
 		terminateOnInterfere: Boolean,
 		vararg scopes: Scope<*, N>
 	) = Scope.Chain.NonBlocking(terminateOnObsolete, terminateOnInterfere, scopes.toList())
 
-	protected fun <T> chain(
+	protected fun chain(
 		vararg scopes: Scope<*, N>
 	) = Scope.Chain.NonBlocking(false, false, scopes.toList())
 
-	protected fun <T> chain(
+	protected fun chain(
 		terminateOnObsolete: Boolean,
 		terminateOnInterfere: Boolean,
 		chain: Scope.Chain<N>
 	) = Scope.Chain.NonBlocking(terminateOnObsolete, terminateOnInterfere, chain.scopes)
 
-	protected fun <T> chain(
+	protected fun chain(
 		chain: Scope.Chain<N>
 	) = Scope.Chain.NonBlocking(false, false, chain.scopes)
 
-	protected fun <T> chainBlocking(
+	protected fun chainBlocking(
 		isIgnoring: Boolean,
 		vararg scopes: Scope<*, N>
 	) = Scope.Chain.Blocking(isIgnoring, scopes.toList())
 
-	protected fun <T> chainBlocking(
+	protected fun chainBlocking(
 		vararg scopes: Scope<*, N>
 	) = Scope.Chain.Blocking(false, scopes.toList())
 
-	protected fun <T> chainBlocking(
+	protected fun chainBlocking(
 		isIgnoring: Boolean,
 		chain: Scope.Chain<N>
 	) = Scope.Chain.Blocking(isIgnoring, chain.scopes)
 
-	protected fun <T> chainBlocking(
+	protected fun chainBlocking(
 		chain: Scope.Chain<N>
 	) = Scope.Chain.Blocking(false, chain.scopes)
 	//endregion
