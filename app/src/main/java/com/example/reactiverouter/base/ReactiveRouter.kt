@@ -154,9 +154,6 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 
 	private fun <T> deferScope(scope: Scope<T, N>): Single<Boolean> {
 		return Single.defer {
-			if (ignoreNextElements) {
-				Single.just(false)
-			}
 			when (scope) {
 				is Scope.Simple -> deferSimpleScope(scope)
 				is Scope.Reactive -> deferReactiveScope(scope)
@@ -207,13 +204,4 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		}
 		return completable!!
 	}
-
-	private val ignoreNextElements: Boolean
-		get() = when (val lastScope = scopesQueue.lastOrNull()) {
-			null -> false
-			is Scope.Simple<*> -> lastScope.isIgnoring
-			is Scope.Reactive.Blocking<*, *> -> lastScope.isIgnoring
-			is Scope.Chain.Blocking<*> -> lastScope.isIgnoring
-			else -> false
-		}
 }
