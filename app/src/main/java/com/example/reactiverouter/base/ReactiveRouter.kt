@@ -15,6 +15,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
+import java.util.*
 import kotlin.math.max
 
 /**
@@ -28,8 +29,8 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 ) : FragmentManager.OnBackStackChangedListener {
 
 	private val _backStackChangeEvent = PublishSubject.create<Boolean>()
-	private val deferredScopes = mutableListOf<Pair<Scope.Simple<N>, BehaviorSubject<Boolean>>>()
-	private val deferredScopesSubject = BehaviorSubject.createDefault(deferredScopes)
+	private val scopesQueue: Queue<Pair<Scope.Simple<N>, BehaviorSubject<Boolean>>> = LinkedList()
+	private val scopesQueueSubject = BehaviorSubject.createDefault<Queue<Pair<Scope.Simple<N>, BehaviorSubject<Boolean>>>>(scopesQueue)
 	private val isResumedSubject = BehaviorSubject.createDefault(false)
 
 	private val subscriptions = CompositeDisposable()
@@ -80,13 +81,13 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	}
 
 	private fun loopDeferredScopes() {
-		deferredScopesSubject.let { subject ->
+		scopesQueueSubject.let { subject ->
 			if (stateLossStrategy == StateLossStrategy.POSTPONE) {
 				isResumedSubject.distinctUntilChanged().switchMap { isResumed ->
 					if (isResumed) {
 						subject
 					} else {
-						Observable.empty<List<Pair<Scope.Simple<N>, BehaviorSubject<Boolean>>>>()
+						Observable.empty<Queue<Pair<Scope.Simple<N>, BehaviorSubject<Boolean>>>>()
 					}
 				}
 			} else {
@@ -94,7 +95,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			}
 		}
 			.filter { it.isNotEmpty() }
-			.map { it.first() }
+			.map { it.peek()!! }
 			.distinctUntilChanged()
 			.observeOn(AndroidSchedulers.mainThread())
 			.switchMapMaybe { (scope, subject) ->
@@ -122,20 +123,20 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			}
 			.doOnDispose {
 				scopeInExecution = null
-				deferredScopes.clear()
+				scopesQueue.clear()
 				notifyScopesChanged()
 			}
 			.subscribe { completeSubject ->
 				scopeInExecution = null
 				completeSubject.onComplete()
-				deferredScopes.removeAt(0)
+				scopesQueue.poll()
 				notifyScopesChanged()
 			}
 			.also { subscriptions.add(it) }
 	}
 
 	private fun notifyScopesChanged() {
-		deferredScopesSubject.onNext(deferredScopes)
+		scopesQueueSubject.onNext(scopesQueue)
 	}
 
 	private fun <T> deferScope(scope: Scope<T, N>): Completable {
@@ -151,11 +152,11 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	private fun deferSimpleScope(scope: Scope.Simple<N>): Completable {
 		val subject = BehaviorSubject.create<Boolean>()
 		val deferredScope = scope to subject
-		deferredScopes.add(deferredScope)
+		scopesQueue.add(deferredScope)
 		notifyScopesChanged()
 		return subject.ignoreElements().doOnDispose {
 			if (scopeInExecution != scope) {
-				deferredScopes.remove(deferredScope)
+				scopesQueue.remove(deferredScope)
 				notifyScopesChanged()
 			}
 		}
@@ -178,8 +179,8 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			return Completable.complete()
 		}
 		var completable: Completable? = null
-		for (i in 0 until scopes.size) {
-			val nextCompletable = deferScope(scopes[i])
+		for (element in scopes) {
+			val nextCompletable = deferScope(element)
 			completable = if (completable == null) {
 				nextCompletable
 			} else {
