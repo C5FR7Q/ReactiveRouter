@@ -31,8 +31,9 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 ) : FragmentManager.OnBackStackChangedListener {
 
 	private val _backStackChangeEvent = PublishSubject.create<Boolean>()
-	private val scopesQueue: Queue<Pair<Scope.Simple<N>, SingleSubject<Boolean>>> = LinkedList()
-	private val scopesQueueSubject = BehaviorSubject.createDefault<Queue<Pair<Scope.Simple<N>, SingleSubject<Boolean>>>>(scopesQueue)
+	private val simpleScopesQueue: Queue<Pair<Scope.Simple<N>, SingleSubject<Boolean>>> = LinkedList()
+	private val simpleScopesQueueSubject =
+		BehaviorSubject.createDefault<Queue<Pair<Scope.Simple<N>, SingleSubject<Boolean>>>>(simpleScopesQueue)
 	private val isResumedSubject = BehaviorSubject.createDefault(false)
 
 	private val subscriptions = CompositeDisposable()
@@ -91,7 +92,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	}
 
 	private fun loopDeferredScopes() {
-		scopesQueueSubject.let { subject ->
+		simpleScopesQueueSubject.let { subject ->
 			if (stateLossStrategy == StateLossStrategy.POSTPONE) {
 				isResumedSubject.distinctUntilChanged().switchMap { isResumed ->
 					if (isResumed) {
@@ -133,23 +134,23 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			}
 			.doOnDispose {
 				scopeInExecution = null
-				scopesQueue.forEach { (_, subject) ->
+				simpleScopesQueue.forEach { (_, subject) ->
 					subject.onSuccess(false)
 				}
-				scopesQueue.clear()
+				simpleScopesQueue.clear()
 				notifyScopesChanged()
 			}
 			.subscribe { (completeSubject, isProcessed) ->
 				scopeInExecution = null
 				completeSubject.onSuccess(isProcessed)
-				scopesQueue.poll()
+				simpleScopesQueue.poll()
 				notifyScopesChanged()
 			}
 			.also { subscriptions.add(it) }
 	}
 
 	private fun notifyScopesChanged() {
-		scopesQueueSubject.onNext(scopesQueue)
+		simpleScopesQueueSubject.onNext(simpleScopesQueue)
 	}
 
 	private fun <T> deferScope(scope: Scope<T, N>): Single<Boolean> {
@@ -165,11 +166,11 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	private fun deferSimpleScope(scope: Scope.Simple<N>): Single<Boolean> {
 		val subject = SingleSubject.create<Boolean>()
 		val deferredScope = scope to subject
-		scopesQueue.add(deferredScope)
+		simpleScopesQueue.add(deferredScope)
 		notifyScopesChanged()
 		return subject.doOnDispose {
 			if (scopeInExecution != scope) {
-				scopesQueue.remove(deferredScope)
+				simpleScopesQueue.remove(deferredScope)
 				notifyScopesChanged()
 			}
 		}
