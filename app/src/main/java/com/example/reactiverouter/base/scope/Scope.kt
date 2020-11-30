@@ -7,7 +7,7 @@ import io.reactivex.Single
  * Stores, what navigation should be performed above above [Navigator]
  * */
 sealed class Scope<T, N : Navigator> {
-	class Simple<N : Navigator>(body: (N) -> Unit) : (N) -> Unit, Scope<Nothing, N>() {
+	class Simple<N : Navigator>(val isIgnoring: Boolean, body: (N) -> Unit) : (N) -> Unit, Scope<Nothing, N>() {
 		private var bodies = mutableListOf<(N) -> Unit>().apply { add(body) }
 
 		/**
@@ -23,14 +23,37 @@ sealed class Scope<T, N : Navigator> {
 		}
 	}
 
-	class Reactive<T, N : Navigator>(
+	sealed class Reactive<T, N : Navigator>(
 		val stream: Single<T>,
 		val scopeProvider: (T) -> Scope<*, N>?
-	) : Scope<T, N>()
+	) : Scope<T, N>() {
+		class Blocking<T, N : Navigator>(
+			val isIgnoring: Boolean,
+			stream: Single<T>,
+			scopeProvider: (T) -> Scope<*, N>?
+		) : Reactive<T, N>(stream, scopeProvider)
 
-	class Chain<N : Navigator>(
+		class NonBlocking<T, N : Navigator>(
+			val terminateOnObsolete: Boolean,
+			stream: Single<T>,
+			scopeProvider: (T) -> Scope<*, N>?
+		) : Reactive<T, N>(stream, scopeProvider)
+	}
+
+	sealed class Chain<N : Navigator>(
 		scopes: List<Scope<*, N>>
 	) : Scope<Any, N>() {
+		class Blocking<N : Navigator>(
+			val isIgnoring: Boolean,
+			scopes: List<Scope<*, N>>
+		) : Chain<N>(scopes)
+
+		class NonBlocking<N : Navigator>(
+			val terminateOnObsolete: Boolean,
+			val terminateOnInterfere: Boolean,
+			scopes: List<Scope<*, N>>
+		) : Chain<N>(scopes)
+
 		var scopes = scopes
 			private set
 
