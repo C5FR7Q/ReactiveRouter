@@ -11,10 +11,12 @@ import com.example.reactiverouter.base.scopeprovider.ScopeProvider
 import io.reactivex.Completable
 import io.reactivex.Maybe
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
+import io.reactivex.subjects.SingleSubject
 import java.util.*
 import kotlin.math.max
 
@@ -29,8 +31,8 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 ) : FragmentManager.OnBackStackChangedListener {
 
 	private val _backStackChangeEvent = PublishSubject.create<Boolean>()
-	private val scopesQueue: Queue<Pair<Scope.Simple<N>, BehaviorSubject<Boolean>>> = LinkedList()
-	private val scopesQueueSubject = BehaviorSubject.createDefault<Queue<Pair<Scope.Simple<N>, BehaviorSubject<Boolean>>>>(scopesQueue)
+	private val scopesQueue: Queue<Pair<Scope.Simple<N>, SingleSubject<Boolean>>> = LinkedList()
+	private val scopesQueueSubject = BehaviorSubject.createDefault<Queue<Pair<Scope.Simple<N>, SingleSubject<Boolean>>>>(scopesQueue)
 	private val isResumedSubject = BehaviorSubject.createDefault(false)
 
 	private val subscriptions = CompositeDisposable()
@@ -73,6 +75,14 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	 * Entry point of any navigational action. Provide [Scope] that should be processed.
 	 * */
 	fun <T> call(provideScope: SP.() -> Scope<T, N>): Completable {
+		return callResponsive(provideScope).ignoreElement()
+	}
+
+	/**
+	 * Entry point of any navigational action. Provide [Scope] that should be processed.
+	 * @return true or false on whether [Scope] is processed or not.
+	 * */
+	fun <T> callResponsive(provideScope: SP.() -> Scope<T, N>): Single<Boolean> {
 		return deferScope(scopeProvider.provideScope())
 	}
 
@@ -87,7 +97,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 					if (isResumed) {
 						subject
 					} else {
-						Observable.empty<Queue<Pair<Scope.Simple<N>, BehaviorSubject<Boolean>>>>()
+						Observable.empty<Queue<Pair<Scope.Simple<N>, SingleSubject<Boolean>>>>()
 					}
 				}
 			} else {
@@ -105,10 +115,10 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 					scope.invoke(navigator)
 					val stackChangeActionsCount = navigator.finishSession()
 					if (stackChangeActionsCount == 0)
-						Maybe.just(subject) else
+						Maybe.just(subject to true) else
 						backStackChangeEvent
 							.skip(max(0, stackChangeActionsCount - 1).toLong())
-							.map { subject }
+							.map { subject to true }
 							.firstElement()
 				}.let { maybe ->
 					when (stateLossStrategy) {
@@ -116,19 +126,22 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 							scopeInExecution = null
 							maybe.onErrorComplete()
 						}
-						StateLossStrategy.IGNORE -> maybe.onErrorReturnItem(subject)
+						StateLossStrategy.IGNORE -> maybe.onErrorReturnItem(subject to false)
 						StateLossStrategy.ERROR -> maybe
 					}
 				}
 			}
 			.doOnDispose {
 				scopeInExecution = null
+				scopesQueue.forEach { (_, subject) ->
+					subject.onSuccess(false)
+				}
 				scopesQueue.clear()
 				notifyScopesChanged()
 			}
-			.subscribe { completeSubject ->
+			.subscribe { (completeSubject, isProcessed) ->
 				scopeInExecution = null
-				completeSubject.onComplete()
+				completeSubject.onSuccess(isProcessed)
 				scopesQueue.poll()
 				notifyScopesChanged()
 			}
@@ -139,8 +152,8 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		scopesQueueSubject.onNext(scopesQueue)
 	}
 
-	private fun <T> deferScope(scope: Scope<T, N>): Completable {
-		return Completable.defer {
+	private fun <T> deferScope(scope: Scope<T, N>): Single<Boolean> {
+		return Single.defer {
 			when (scope) {
 				is Scope.Simple -> deferSimpleScope(scope)
 				is Scope.Reactive -> deferReactiveScope(scope)
@@ -149,12 +162,12 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		}
 	}
 
-	private fun deferSimpleScope(scope: Scope.Simple<N>): Completable {
-		val subject = BehaviorSubject.create<Boolean>()
+	private fun deferSimpleScope(scope: Scope.Simple<N>): Single<Boolean> {
+		val subject = SingleSubject.create<Boolean>()
 		val deferredScope = scope to subject
 		scopesQueue.add(deferredScope)
 		notifyScopesChanged()
-		return subject.ignoreElements().doOnDispose {
+		return subject.doOnDispose {
 			if (scopeInExecution != scope) {
 				scopesQueue.remove(deferredScope)
 				notifyScopesChanged()
@@ -162,30 +175,32 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		}
 	}
 
-	private fun <T> deferReactiveScope(reactiveScope: Scope.Reactive<T, N>): Completable {
-		return reactiveScope.stream.flatMapCompletable {
+	private fun <T> deferReactiveScope(reactiveScope: Scope.Reactive<T, N>): Single<Boolean> {
+		return reactiveScope.stream.flatMap {
 			val scope: Scope<*, N>? = reactiveScope.scopeProvider.invoke(it)
 			if (scope != null) {
 				deferScope(scope)
 			} else {
-				Completable.complete()
+				Single.just(true)
 			}
 		}
 	}
 
-	private fun deferChainScope(chain: Scope.Chain<N>): Completable {
+	private fun deferChainScope(chain: Scope.Chain<N>): Single<Boolean> {
 		val scopes = chain.scopes
 		if (scopes.isEmpty()) {
-			return Completable.complete()
+			return Single.just(true)
 		}
-		var completable: Completable? = null
+		var completable: Single<Boolean>? = null
 		for (element in scopes) {
 			val nextCompletable = deferScope(element)
-			completable = if (completable == null) {
-				nextCompletable
-			} else {
-				completable.andThen(nextCompletable)
-			}
+			completable = completable?.flatMap { success ->
+				if (success) {
+					nextCompletable
+				} else {
+					Single.just(false)
+				}
+			} ?: nextCompletable
 		}
 		return completable!!
 	}
