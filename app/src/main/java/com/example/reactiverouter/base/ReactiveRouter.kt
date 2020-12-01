@@ -151,14 +151,14 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 						}.also { scopesSubscriptions[scope] = it }
 					}
 					is Scope.Reactive.NonBlocking -> {
-						deferReactiveScope(scope, subject, false).subscribe { processed ->
+						deferReactiveScope(scope, subject).subscribe { processed ->
 							scopesSubscriptions.remove(scope)
 						}.also { scopesSubscriptions[scope] = it }
 						scopesQueue.poll()
 						notifyScopesChanged()
 					}
 					is Scope.Chain.NonBlocking -> {
-						deferChainScope(scope, subject, false).subscribe { processed ->
+						deferChainScope(scope, subject).subscribe { processed ->
 							scopesSubscriptions.remove(scope)
 						}.also { scopesSubscriptions[scope] = it }
 						scopesQueue.poll()
@@ -284,8 +284,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 
 	private fun <T> deferReactiveScope(
 		reactiveScope: Scope.Reactive<T, N>,
-		subject: SingleSubject<Boolean>,
-		isBlocking: Boolean = true
+		subject: SingleSubject<Boolean>
 	): Single<Boolean> {
 		return reactiveScope.stream.flatMap {
 			val scope: Scope<*, N>? = reactiveScope.scopeProvider.invoke(it)
@@ -300,8 +299,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 
 	private fun deferChainScope(
 		chainScope: Scope.Chain<N>,
-		subject: SingleSubject<Boolean>,
-		isBlocking: Boolean = true
+		subject: SingleSubject<Boolean>
 	): Single<Boolean> {
 		val scopes = chainScope.scopes
 		if (scopes.isEmpty()) {
