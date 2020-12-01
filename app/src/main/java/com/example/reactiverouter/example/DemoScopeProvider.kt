@@ -15,14 +15,14 @@ class DemoScopeProvider(
 
 	fun show(fragment: Fragment) = simple { show(fragment) }
 
-	fun showDemo2IfNeed() = reactive(someProvider.shouldDoSomething) { shouldShow ->
+	fun showDemo1IfNeed() = reactive(someProvider.shouldDoSomething) { shouldShow ->
 		Log.d("ReactiveRouter", "showDemo2:$shouldShow")
 		if (shouldShow) {
 			simple {
-				show(DemoFragment2())
+				show(DemoFragment1())
 			}
 		} else null
 	}
 
-	fun chainOfDemo2AndDemo3() = chain(showDemo2IfNeed(), show(DemoFragment3()))
+	fun chainOfDemo2AndDemo3() = chain(showDemo1IfNeed(), show(DemoFragment3()))
 }

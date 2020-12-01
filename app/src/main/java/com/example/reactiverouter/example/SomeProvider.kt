@@ -9,5 +9,5 @@ class SomeProvider {
 	val shouldDoSomething: Single<Boolean> =
 		Observable.interval(8, 5, TimeUnit.SECONDS)
 			.firstElement()
-			.flatMapSingle { Single.just(Random.nextBoolean()) }
+			.flatMapSingle { Single.just(Random.nextInt(10) > 3) }
 }

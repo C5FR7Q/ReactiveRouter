@@ -54,8 +54,8 @@ class MainActivity : AppCompatActivity() {
 				.andThen(call { show(DemoFragment2()) })
 				.subscribe { Log.v("ReactiveRouter", "Close. THEN replace with DemoFragment3. THEN show DemoFragment2") }
 
-			call { showDemo2IfNeed() }.subscribe {
-				Log.v("ReactiveRouter", "showDemo2IfNeedCompleted")
+			call { showDemo1IfNeed() }.subscribe {
+				Log.v("ReactiveRouter", "showDemo1IfNeedCompleted")
 			}
 		}
 	}
