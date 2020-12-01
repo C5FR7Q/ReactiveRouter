@@ -10,9 +10,21 @@ import io.reactivex.Single
 abstract class ScopeProvider<N : Navigator> {
 
 	//region Simple
-	protected fun simple(isIgnoring: Boolean, scopeBody: N.() -> Unit) = Scope.Simple<N>(isIgnoring) { it.scopeBody() }
-	protected fun simple(scopeBody: N.() -> Unit) = Scope.Simple<N>(false) { it.scopeBody() }
-	protected fun simple(isIgnoring: Boolean, simple: Scope.Simple<N>) = Scope.Simple(isIgnoring, simple)
+	protected fun simple(
+		isIgnoring: Boolean,
+		waitNonBlocking: Boolean,
+		scopeBody: N.() -> Unit
+	) = Scope.Simple<N>(isIgnoring, waitNonBlocking) { it.scopeBody() }
+
+	protected fun simple(
+		scopeBody: N.() -> Unit
+	) = Scope.Simple<N>(false, false) { it.scopeBody() }
+
+	protected fun simple(
+		isIgnoring: Boolean,
+		waitNonBlocking: Boolean,
+		simple: Scope.Simple<N>
+	) = Scope.Simple(isIgnoring, waitNonBlocking, simple)
 	//endregion
 
 	//region Reactive
@@ -38,23 +50,25 @@ abstract class ScopeProvider<N : Navigator> {
 
 	protected fun <T> reactiveBlocking(
 		isIgnoring: Boolean,
+		waitNonBlocking: Boolean,
 		stream: Single<T>,
 		scopeProvider: (T) -> Scope.Simple<N>?
-	) = Scope.Reactive.Blocking(isIgnoring, stream, scopeProvider)
+	) = Scope.Reactive.Blocking(isIgnoring, waitNonBlocking, stream, scopeProvider)
 
 	protected fun <T> reactiveBlocking(
 		stream: Single<T>,
 		scopeProvider: (T) -> Scope.Simple<N>?
-	) = Scope.Reactive.Blocking(false, stream, scopeProvider)
+	) = Scope.Reactive.Blocking(false, false, stream, scopeProvider)
 
 	protected fun <T> reactiveBlocking(
 		isIgnoring: Boolean,
+		waitNonBlocking: Boolean,
 		reactive: Scope.Reactive<T, N>
-	) = Scope.Reactive.Blocking(isIgnoring, reactive.stream, reactive.scopeProvider)
+	) = Scope.Reactive.Blocking(isIgnoring, waitNonBlocking, reactive.stream, reactive.scopeProvider)
 
 	protected fun <T> reactiveBlocking(
 		reactive: Scope.Reactive<T, N>
-	) = Scope.Reactive.Blocking(false, reactive.stream, reactive.scopeProvider)
+	) = Scope.Reactive.Blocking(false, false, reactive.stream, reactive.scopeProvider)
 	//endregion
 
 
@@ -81,20 +95,22 @@ abstract class ScopeProvider<N : Navigator> {
 
 	protected fun chainBlocking(
 		isIgnoring: Boolean,
+		waitNonBlocking: Boolean,
 		vararg scopes: Scope<*, N>
-	) = Scope.Chain.Blocking(isIgnoring, scopes.toList())
+	) = Scope.Chain.Blocking(isIgnoring, waitNonBlocking, scopes.toList())
 
 	protected fun chainBlocking(
 		vararg scopes: Scope<*, N>
-	) = Scope.Chain.Blocking(false, scopes.toList())
+	) = Scope.Chain.Blocking(false, false, scopes.toList())
 
 	protected fun chainBlocking(
 		isIgnoring: Boolean,
+		waitNonBlocking: Boolean,
 		chain: Scope.Chain<N>
-	) = Scope.Chain.Blocking(isIgnoring, chain.scopes)
+	) = Scope.Chain.Blocking(isIgnoring, waitNonBlocking, chain.scopes)
 
 	protected fun chainBlocking(
 		chain: Scope.Chain<N>
-	) = Scope.Chain.Blocking(false, chain.scopes)
+	) = Scope.Chain.Blocking(false, false, chain.scopes)
 	//endregion
 }

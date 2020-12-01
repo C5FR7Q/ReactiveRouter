@@ -35,6 +35,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	private val scopesQueue: Queue<Pair<Scope<*, N>, SingleSubject<Boolean>>> = LinkedList()
 	private val scopesQueueSubject = BehaviorSubject.createDefault(scopesQueue)
 	private val scopesSubscriptions = mutableMapOf<Scope<*, N>, Disposable>()
+	private val scopesSubscriptionsSubject = BehaviorSubject.createDefault(scopesSubscriptions)
 	private val simpleScopesQueue: Queue<Pair<Scope.Simple<N>, SingleSubject<Boolean>>> = LinkedList()
 	private val simpleScopesQueueSubject = BehaviorSubject.createDefault(simpleScopesQueue)
 	private val isResumedSubject = BehaviorSubject.createDefault(false)
@@ -102,21 +103,48 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			.subscribe { (scope, subject) ->
 				when (scope) {
 					is Scope.Simple -> {
-						deferSimpleScope(scope, subject).subscribe { processed ->
+						deferSimpleScope(scope, subject).let { stream ->
+							if (scope.waitNonBlocking) {
+								scopesSubscriptionsSubject.hide()
+									.filter { it.isEmpty() }
+									.firstOrError()
+									.flatMap { stream }
+							} else {
+								stream
+							}
+						}.subscribe { processed ->
 							scopesSubscriptions.remove(scope)
 							scopesQueue.poll()
 							notifyScopesChanged()
 						}.also { scopesSubscriptions[scope] = it }
 					}
 					is Scope.Reactive.Blocking -> {
-						deferReactiveScope(scope, subject).subscribe { processed ->
+						deferReactiveScope(scope, subject).let { stream ->
+							if (scope.waitNonBlocking) {
+								scopesSubscriptionsSubject.hide()
+									.filter { it.isEmpty() }
+									.firstOrError()
+									.flatMap { stream }
+							} else {
+								stream
+							}
+						}.subscribe { processed ->
 							scopesSubscriptions.remove(scope)
 							scopesQueue.poll()
 							notifyScopesChanged()
 						}.also { scopesSubscriptions[scope] = it }
 					}
 					is Scope.Chain.Blocking -> {
-						deferChainScope(scope, subject).subscribe { processed ->
+						deferChainScope(scope, subject).let { stream ->
+							if (scope.waitNonBlocking) {
+								scopesSubscriptionsSubject.hide()
+									.filter { it.isEmpty() }
+									.firstOrError()
+									.flatMap { stream }
+							} else {
+								stream
+							}
+						}.subscribe { processed ->
 							scopesSubscriptions.remove(scope)
 							scopesQueue.poll()
 							notifyScopesChanged()
