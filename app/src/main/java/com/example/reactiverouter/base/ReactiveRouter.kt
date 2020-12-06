@@ -220,9 +220,9 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 			simpleScopesQueueSubject.filter { currentScopes ->
 				currentScopes.toMutableList().run {
 					removeAll(initialScopes)
-					lastOrNull()?.let { (identifiableSimpleScope, _) ->
+					firstOrNull { (identifiableSimpleScope, _) ->
 						identifiableSimpleScope.scope.isInterrupting && identifiableSimpleScope.id != id
-					} ?: false
+					} != null
 				}
 			}
 				.firstOrError()
