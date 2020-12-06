@@ -179,14 +179,27 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	}
 
 	private fun <T> deferReactiveScope(reactiveScope: Scope.Reactive<T, N>, id: Int): Single<Boolean> {
-		return reactiveScope.stream.flatMap {
-			val scope: Scope<*, N>? = reactiveScope.scopeProvider.invoke(it)
-			if (scope != null) {
-				deferScope(scope, id)
-			} else {
-				Single.just(true)
+		val initialScopes = simpleScopesQueue.toMutableList()
+		return Single.ambArray(
+			reactiveScope.stream.flatMap {
+				val scope: Scope<*, N>? = reactiveScope.scopeProvider.invoke(it)
+				if (scope != null) {
+					deferScope(scope, id)
+				} else {
+					Single.just(true)
+				}
+			},
+			simpleScopesQueueSubject.filter { currentScopes ->
+				currentScopes.toMutableList().run {
+					removeAll(initialScopes)
+					lastOrNull()?.let { (identifiableSimpleScope, _) ->
+						identifiableSimpleScope.scope.isInterrupting && identifiableSimpleScope.id != id
+					} ?: false
+				}
 			}
-		}
+				.firstOrError()
+				.map { false }
+		)
 	}
 
 	private fun deferChainScope(chainScope: Scope.Chain<N>, id: Int): Single<Boolean> {
