@@ -179,7 +179,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	}
 
 	private fun <T> deferReactiveScope(reactiveScope: Scope.Reactive<T, N>, id: Int): Single<Boolean> {
-		return wrapWithInterruption(id, simpleScopesQueue.toList(), reactiveScope.stream.flatMap {
+		return wrapWithInterruption(id, simpleScopesQueue, reactiveScope.stream.flatMap {
 			val scope: Scope<*, N>? = reactiveScope.scopeProvider.invoke(it)
 			if (scope != null) {
 				deferScope(scope, id)
@@ -194,7 +194,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		if (scopes.isEmpty()) {
 			return Single.just(true)
 		}
-		val initialScopes = simpleScopesQueue.toMutableList()
+		val initialScopes = simpleScopesQueue
 		var single: Single<Boolean>? = null
 		for (element in scopes) {
 			val nextSingle = wrapWithInterruption(id, initialScopes, deferScope(element, id))
@@ -213,7 +213,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 
 	private fun wrapWithInterruption(
 		id: Int,
-		initialScopes: List<Pair<IdentifiableSimpleScope<N>, SingleSubject<Boolean>>>,
+		initialScopes: Queue<Pair<IdentifiableSimpleScope<N>, SingleSubject<Boolean>>>,
 		wrappedSingle: Single<Boolean>
 	): Single<Boolean> {
 		return Single.ambArray(
