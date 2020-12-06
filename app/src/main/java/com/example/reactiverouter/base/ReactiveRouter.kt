@@ -179,27 +179,14 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	}
 
 	private fun <T> deferReactiveScope(reactiveScope: Scope.Reactive<T, N>, id: Int): Single<Boolean> {
-		val initialScopes = simpleScopesQueue.toMutableList()
-		return Single.ambArray(
-			reactiveScope.stream.flatMap {
-				val scope: Scope<*, N>? = reactiveScope.scopeProvider.invoke(it)
-				if (scope != null) {
-					deferScope(scope, id)
-				} else {
-					Single.just(true)
-				}
-			},
-			simpleScopesQueueSubject.filter { currentScopes ->
-				currentScopes.toMutableList().run {
-					removeAll(initialScopes)
-					lastOrNull()?.let { (identifiableSimpleScope, _) ->
-						identifiableSimpleScope.scope.isInterrupting && identifiableSimpleScope.id != id
-					} ?: false
-				}
+		return wrapWithInterruption(id, simpleScopesQueue.toList(), reactiveScope.stream.flatMap {
+			val scope: Scope<*, N>? = reactiveScope.scopeProvider.invoke(it)
+			if (scope != null) {
+				deferScope(scope, id)
+			} else {
+				Single.just(true)
 			}
-				.firstOrError()
-				.map { false }
-		)
+		})
 	}
 
 	private fun deferChainScope(chainScope: Scope.Chain<N>, id: Int): Single<Boolean> {
@@ -210,19 +197,7 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		val initialScopes = simpleScopesQueue.toMutableList()
 		var single: Single<Boolean>? = null
 		for (element in scopes) {
-			val nextSingle = Single.ambArray(
-				simpleScopesQueueSubject.filter { currentScopes ->
-					currentScopes.toMutableList().run {
-						removeAll(initialScopes)
-						lastOrNull()?.let { (identifiableSimpleScope, _) ->
-							identifiableSimpleScope.scope.isInterrupting && identifiableSimpleScope.id != id
-						} ?: false
-					}
-				}
-					.firstOrError()
-					.map { false },
-				deferScope(element, id)
-			)
+			val nextSingle = wrapWithInterruption(id, initialScopes, deferScope(element, id))
 			single = single?.flatMap { success ->
 				if (success) {
 					nextSingle
@@ -235,4 +210,24 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	}
 
 	private fun getNextId() = nextId++
+
+	private fun wrapWithInterruption(
+		id: Int,
+		initialScopes: List<Pair<IdentifiableSimpleScope<N>, SingleSubject<Boolean>>>,
+		wrappedSingle: Single<Boolean>
+	): Single<Boolean> {
+		return Single.ambArray(
+			simpleScopesQueueSubject.filter { currentScopes ->
+				currentScopes.toMutableList().run {
+					removeAll(initialScopes)
+					lastOrNull()?.let { (identifiableSimpleScope, _) ->
+						identifiableSimpleScope.scope.isInterrupting && identifiableSimpleScope.id != id
+					} ?: false
+				}
+			}
+				.firstOrError()
+				.map { false },
+			wrappedSingle
+		)
+	}
 }
