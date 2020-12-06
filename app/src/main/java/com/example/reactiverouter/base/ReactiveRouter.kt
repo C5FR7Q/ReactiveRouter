@@ -14,7 +14,6 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.SingleSubject
@@ -32,10 +31,6 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 ) : FragmentManager.OnBackStackChangedListener {
 
 	private val _backStackChangeEvent = PublishSubject.create<Boolean>()
-	private val scopesQueue: Queue<Pair<Scope<*, N>, SingleSubject<Boolean>>> = LinkedList()
-	private val scopesQueueSubject = BehaviorSubject.createDefault(scopesQueue)
-	private val scopesSubscriptions = mutableMapOf<Scope<*, N>, Disposable>()
-	private val scopesSubscriptionsSubject = BehaviorSubject.createDefault(scopesSubscriptions)
 	private val simpleScopesQueue: Queue<Pair<Scope.Simple<N>, SingleSubject<Boolean>>> = LinkedList()
 	private val simpleScopesQueueSubject = BehaviorSubject.createDefault(simpleScopesQueue)
 	private val isResumedSubject = BehaviorSubject.createDefault(false)
@@ -96,78 +91,6 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 	}
 
 	private fun loopDeferredScopes() {
-		scopesQueueSubject.filter { it.isNotEmpty() }
-			.map { it.peek()!! }
-			.distinctUntilChanged()
-			.observeOn(AndroidSchedulers.mainThread())
-			.subscribe { (scope, subject) ->
-				when (scope) {
-					is Scope.Simple -> {
-						deferSimpleScope(scope, subject).let { stream ->
-							if (scope.waitNonBlocking) {
-								scopesSubscriptionsSubject.hide()
-									.filter { it.isEmpty() }
-									.firstOrError()
-									.flatMap { stream }
-							} else {
-								stream
-							}
-						}.subscribe { processed ->
-							scopesSubscriptions.remove(scope)
-							scopesQueue.poll()
-							notifyScopesChanged()
-						}.also { scopesSubscriptions[scope] = it }
-					}
-					is Scope.Reactive.Blocking -> {
-						deferReactiveScope(scope, subject).let { stream ->
-							if (scope.waitNonBlocking) {
-								scopesSubscriptionsSubject.hide()
-									.filter { it.isEmpty() }
-									.firstOrError()
-									.flatMap { stream }
-							} else {
-								stream
-							}
-						}.subscribe { processed ->
-							scopesSubscriptions.remove(scope)
-							scopesQueue.poll()
-							notifyScopesChanged()
-						}.also { scopesSubscriptions[scope] = it }
-					}
-					is Scope.Chain.Blocking -> {
-						deferChainScope(scope, subject).let { stream ->
-							if (scope.waitNonBlocking) {
-								scopesSubscriptionsSubject.hide()
-									.filter { it.isEmpty() }
-									.firstOrError()
-									.flatMap { stream }
-							} else {
-								stream
-							}
-						}.subscribe { processed ->
-							scopesSubscriptions.remove(scope)
-							scopesQueue.poll()
-							notifyScopesChanged()
-						}.also { scopesSubscriptions[scope] = it }
-					}
-					is Scope.Reactive.NonBlocking -> {
-						deferReactiveScope(scope, subject).subscribe { processed ->
-							scopesSubscriptions.remove(scope)
-						}.also { scopesSubscriptions[scope] = it }
-						scopesQueue.poll()
-						notifyScopesChanged()
-					}
-					is Scope.Chain.NonBlocking -> {
-						deferChainScope(scope, subject).subscribe { processed ->
-							scopesSubscriptions.remove(scope)
-						}.also { scopesSubscriptions[scope] = it }
-						scopesQueue.poll()
-						notifyScopesChanged()
-					}
-				}
-			}
-			.also { subscriptions.add(it) }
-
 		simpleScopesQueueSubject.let { subject ->
 			if (stateLossStrategy == StateLossStrategy.POSTPONE) {
 				isResumedSubject.distinctUntilChanged().switchMap { isResumed ->
@@ -229,48 +152,18 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		simpleScopesQueueSubject.onNext(simpleScopesQueue)
 	}
 
-	private fun notifyScopesChanged() {
-		scopesQueueSubject.onNext(scopesQueue)
-	}
-
 	private fun <T> deferScope(scope: Scope<T, N>): Single<Boolean> {
 		return Single.defer {
-			val isIgnoring = scopesQueue.map { (scope, _) ->
-				when (scope) {
-					is Scope.Simple -> scope.isIgnoring
-					is Scope.Reactive.Blocking -> scope.isIgnoring
-					is Scope.Chain.Blocking -> scope.isIgnoring
-					else -> false
-				}
-			}.firstOrNull { it } ?: false
-			if (isIgnoring) {
-				Single.just(false)
-			}
-			val subject = SingleSubject.create<Boolean>()
-			val deferredScope = scope to subject
-			scopesQueue.add(deferredScope)
-			notifyScopesChanged()
-			subject.doOnDispose {
-				scopesSubscriptions.remove(scope)?.dispose()
-				if (scopesQueue.contains(deferredScope)) {
-					scopesQueue.remove(deferredScope)
-					notifyScopesChanged()
-				}
-			}
-		}
-	}
-
-	private fun <T> deferInnerScope(scope: Scope<T, N>, subject: SingleSubject<Boolean> = SingleSubject.create()): Single<Boolean> {
-		return Single.defer {
 			when (scope) {
-				is Scope.Simple -> deferSimpleScope(scope, subject)
-				is Scope.Reactive -> deferReactiveScope(scope, subject)
-				is Scope.Chain -> deferChainScope(scope, subject)
+				is Scope.Simple -> deferSimpleScope(scope)
+				is Scope.Reactive -> deferReactiveScope(scope)
+				is Scope.Chain -> deferChainScope(scope)
 			}
 		}
 	}
 
-	private fun deferSimpleScope(simpleScope: Scope.Simple<N>, subject: SingleSubject<Boolean>): Single<Boolean> {
+	private fun deferSimpleScope(simpleScope: Scope.Simple<N>): Single<Boolean> {
+		val subject = SingleSubject.create<Boolean>()
 		val deferredSimpleScope = simpleScope to subject
 		simpleScopesQueue.add(deferredSimpleScope)
 		notifySimpleScopesChanged()
@@ -282,41 +175,33 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		}
 	}
 
-	private fun <T> deferReactiveScope(
-		reactiveScope: Scope.Reactive<T, N>,
-		subject: SingleSubject<Boolean>
-	): Single<Boolean> {
+	private fun <T> deferReactiveScope(reactiveScope: Scope.Reactive<T, N>): Single<Boolean> {
 		return reactiveScope.stream.flatMap {
 			val scope: Scope<*, N>? = reactiveScope.scopeProvider.invoke(it)
 			if (scope != null) {
-				deferInnerScope(scope, subject)
+				deferScope(scope)
 			} else {
-				subject.onSuccess(true)
 				Single.just(true)
 			}
 		}
 	}
 
-	private fun deferChainScope(
-		chainScope: Scope.Chain<N>,
-		subject: SingleSubject<Boolean>
-	): Single<Boolean> {
+	private fun deferChainScope(chainScope: Scope.Chain<N>): Single<Boolean> {
 		val scopes = chainScope.scopes
 		if (scopes.isEmpty()) {
-			subject.onSuccess(true)
 			return Single.just(true)
 		}
-		var completable: Single<Boolean>? = null
+		var single: Single<Boolean>? = null
 		for (element in scopes) {
-			val nextCompletable = deferInnerScope(element)
-			completable = completable?.flatMap { success ->
+			val nextSingle = deferScope(element)
+			single = single?.flatMap { success ->
 				if (success) {
-					nextCompletable
+					nextSingle
 				} else {
 					Single.just(false)
 				}
-			} ?: nextCompletable
+			} ?: nextSingle
 		}
-		return completable!!.doOnSuccess { subject.onSuccess(it) }
+		return single!!
 	}
 }
