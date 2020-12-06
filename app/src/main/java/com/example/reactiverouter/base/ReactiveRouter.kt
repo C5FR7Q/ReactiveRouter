@@ -207,9 +207,22 @@ abstract class ReactiveRouter<N : Navigator, SP : ScopeProvider<N>>(
 		if (scopes.isEmpty()) {
 			return Single.just(true)
 		}
+		val initialScopes = simpleScopesQueue.toMutableList()
 		var single: Single<Boolean>? = null
 		for (element in scopes) {
-			val nextSingle = deferScope(element, id)
+			val nextSingle = Single.ambArray(
+				simpleScopesQueueSubject.filter { currentScopes ->
+					currentScopes.toMutableList().run {
+						removeAll(initialScopes)
+						lastOrNull()?.let { (identifiableSimpleScope, _) ->
+							identifiableSimpleScope.scope.isInterrupting && identifiableSimpleScope.id != id
+						} ?: false
+					}
+				}
+					.firstOrError()
+					.map { false },
+				deferScope(element, id)
+			)
 			single = single?.flatMap { success ->
 				if (success) {
 					nextSingle
