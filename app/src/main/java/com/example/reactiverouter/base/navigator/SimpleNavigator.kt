@@ -37,9 +37,10 @@ open class SimpleNavigator(
 	}
 
 	open fun show(fragment: Fragment) {
+		val tag = tagExtractor.extractTag(fragment)
 		fragmentManager.beginTransaction()
-			.replace(containerId, fragment, fragment.javaClass.simpleName)
-			.addToBackStack(fragment.javaClass.simpleName)
+			.replace(containerId, fragment, tag)
+			.addToBackStack(tag)
 			.commit()
 		increaseStackChangeActionsCount()
 	}
