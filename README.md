@@ -157,12 +157,14 @@ Defines, what should `ReactiveRouter` do in case of `java.lang.IllegalStateExcep
 
 ## Additional classes
 
-### TagExtractor
-
-### Simple implementations
-
+1. **SimpleNavigator** is a `Navigator`, that provides base set of navigational, such as `show`, `showDialog`, `close`, different checks e.t.c.
+2. **SimpleScopeProvide** is a `ScopeProvider`, that contains `closeCurrent` method, which closes current screen.
+3. **TagExtractor** is an utility abstract class, that helps to extract String tag from different kinds of data. Is used in `SimpleNavigator`
+4. **SimpleTagExtractor** is an implementation of `TagExtractor`, that extracts tags from `Fragment` or `Class<out Fragment>`. The structure of resulting tag is `class.name`
+5. **SimpleJsonTagExtractor** is an implementation of `TagExtractor`, that supports `Fragment`, `Class<out Fragment>`, `SimpleJsonTagExtractor.TagModel` (Which is actually a pair of `Class<out Fragment>` and `Bundle?`). In brief, it helps you to separate tags of the same Fragments with different `Fragment.arguments`. Tag structure is like `${class.name}_${jsonBundle}`, where jsonBundle is a Json representation of `Bundle`. Doesn't work with collections inside of `Bundle`. 
 ---
 
 ### Timelines with examples
 
-### Back pressed
+### Back / Up button behavior
+Execution of scopes queue is based on back stack changes. So, you should completely control what is happening in the back stack, what can change it. By that reason override of default back / up button click behavior is needed. Just define default behavior with `ReactiveRouter` (e.g. with calling `closeCurrent` scope or something similar, what is calling `FragmentManager.popBackStack` under the hood).
