@@ -165,7 +165,7 @@ Defines, what should `ReactiveRouter` do in case of `java.lang.IllegalStateExcep
 ---
 
 ### Timeline with interruption examples
-![alt text](timeline.png)
+![alt text](timeline1.png)
 
 Interruption doesn't cancel simple of complex scope, that was already added to execution queue (the last example).
 
