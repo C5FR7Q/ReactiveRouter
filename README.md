@@ -164,7 +164,10 @@ Defines, what should `ReactiveRouter` do in case of `java.lang.IllegalStateExcep
 5. **SimpleJsonTagExtractor** is an implementation of `TagExtractor`, that supports `Fragment`, `Class<out Fragment>`, `SimpleJsonTagExtractor.TagModel` (Which is actually a pair of `Class<out Fragment>` and `Bundle?`). In brief, it helps you to separate tags of the same Fragments with different `Fragment.arguments`. Tag structure is like `${class.name}_${jsonBundle}`, where jsonBundle is a Json representation of `Bundle`. Doesn't work with collections inside of `Bundle`. 
 ---
 
-### Timelines with examples
+### Timeline with interruption examples
+![alt text](timeline.png)
+
+Interruption doesn't cancel simple of complex scope, that was already added to execution queue (the last example).
 
 ### Back / Up button behavior
 Execution of scopes queue is based on back stack changes. So, you should completely control what is happening in the back stack, what can change it. By that reason override of default back / up button click behavior is needed. Just define default behavior with `ReactiveRouter` (e.g. with calling `closeCurrent` scope or something similar, what is calling `FragmentManager.popBackStack` under the hood).
