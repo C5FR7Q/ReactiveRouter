@@ -1,4 +1,4 @@
-package com.example.reactiverouter.base.navigator
+package com.github.c5fr7q.reactiverouter.navigator
 
 /**
  * Should provide navigational functions, that deals with [androidx.fragment.app.FragmentManager]

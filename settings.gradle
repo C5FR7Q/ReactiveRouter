@@ -1,2 +1,3 @@
+include ':reactiverouter'
 include ':app'
 rootProject.name = "ReactiveRouter"

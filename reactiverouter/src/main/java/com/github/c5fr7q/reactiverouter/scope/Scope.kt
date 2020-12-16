@@ -1,7 +1,7 @@
-package com.example.reactiverouter.base.scope
+package com.github.c5fr7q.reactiverouter.scope
 
-import com.example.reactiverouter.base.navigator.Navigator
-import io.reactivex.Single
+import com.github.c5fr7q.reactiverouter.navigator.Navigator
+import io.reactivex.rxjava3.core.Single
 
 /**
  * Stores, what navigation should be performed above above [Navigator]

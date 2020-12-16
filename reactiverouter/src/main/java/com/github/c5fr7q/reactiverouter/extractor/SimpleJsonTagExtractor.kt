@@ -1,4 +1,4 @@
-package com.example.reactiverouter.base.extractor
+package com.github.c5fr7q.reactiverouter.extractor
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment

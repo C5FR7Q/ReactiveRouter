@@ -1,23 +1,23 @@
-package com.example.reactiverouter.base
+package com.github.c5fr7q.reactiverouter
 
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
-import com.example.reactiverouter.base.navigator.Navigator
-import com.example.reactiverouter.base.scope.IdentifiableSimpleScope
-import com.example.reactiverouter.base.scope.Scope
-import com.example.reactiverouter.base.scopeprovider.ScopeProvider
-import io.reactivex.Completable
-import io.reactivex.Maybe
-import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.subjects.BehaviorSubject
-import io.reactivex.subjects.PublishSubject
-import io.reactivex.subjects.SingleSubject
+import com.github.c5fr7q.reactiverouter.navigator.Navigator
+import com.github.c5fr7q.reactiverouter.scope.IdentifiableSimpleScope
+import com.github.c5fr7q.reactiverouter.scope.Scope
+import com.github.c5fr7q.reactiverouter.scopeprovider.ScopeProvider
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Maybe
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Single
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.subjects.BehaviorSubject
+import io.reactivex.rxjava3.subjects.PublishSubject
+import io.reactivex.rxjava3.subjects.SingleSubject
 import java.util.*
 import kotlin.math.max
 

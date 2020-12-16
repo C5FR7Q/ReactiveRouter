@@ -1,11 +1,10 @@
-package com.example.reactiverouter.example
+package com.example.reactiverouter
 
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.example.reactiverouter.R
-import com.example.reactiverouter.base.navigator.SimpleNavigator
-import com.example.reactiverouter.base.scope.Scope
+import com.github.c5fr7q.reactiverouter.navigator.SimpleNavigator
+import com.github.c5fr7q.reactiverouter.scope.Scope
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {

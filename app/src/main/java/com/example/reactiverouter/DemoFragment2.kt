@@ -1,4 +1,4 @@
-package com.example.reactiverouter.example
+package com.example.reactiverouter
 
 import android.graphics.Color
 import android.os.Bundle

@@ -1,11 +1,11 @@
-package com.example.reactiverouter.base.scopeprovider
+package com.github.c5fr7q.reactiverouter.scopeprovider
 
-import com.example.reactiverouter.base.navigator.Navigator
-import com.example.reactiverouter.base.scope.Scope
-import io.reactivex.Single
+import com.github.c5fr7q.reactiverouter.navigator.Navigator
+import com.github.c5fr7q.reactiverouter.scope.Scope
+import io.reactivex.rxjava3.core.Single
 
 /**
- * Should provide all available ready-to-use [Scope]s, that can be used inside of [ReactiveRouter.call]
+ * Should provide all available ready-to-use [Scope]s, that can be used inside of [com.github.c5fr7q.reactiverouter.ReactiveRouter.call]
  * */
 abstract class ScopeProvider<N : Navigator> {
 

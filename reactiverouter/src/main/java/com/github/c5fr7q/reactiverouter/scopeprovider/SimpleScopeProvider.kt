@@ -1,6 +1,6 @@
-package com.example.reactiverouter.base.scopeprovider
+package com.github.c5fr7q.reactiverouter.scopeprovider
 
-import com.example.reactiverouter.base.navigator.SimpleNavigator
+import com.github.c5fr7q.reactiverouter.navigator.SimpleNavigator
 
 /**
  * [ScopeProvider] with the minimum set of common scopes

@@ -1,9 +1,9 @@
-package com.example.reactiverouter.example
+package com.example.reactiverouter
 
 import android.util.Log
 import androidx.fragment.app.Fragment
-import com.example.reactiverouter.base.navigator.SimpleNavigator
-import com.example.reactiverouter.base.scopeprovider.SimpleScopeProvider
+import com.github.c5fr7q.reactiverouter.navigator.SimpleNavigator
+import com.github.c5fr7q.reactiverouter.scopeprovider.SimpleScopeProvider
 
 class DemoScopeProvider(
 	private val someProvider: SomeProvider

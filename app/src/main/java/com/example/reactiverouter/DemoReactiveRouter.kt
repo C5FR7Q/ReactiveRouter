@@ -1,19 +1,17 @@
-package com.example.reactiverouter.example
+package com.example.reactiverouter
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import com.example.reactiverouter.R
-import com.example.reactiverouter.base.ReactiveRouter
-import com.example.reactiverouter.base.StateLossStrategy
-import com.example.reactiverouter.base.extractor.SimpleTagExtractor
-import com.example.reactiverouter.base.navigator.SimpleNavigator
-import io.reactivex.Observable
+import com.github.c5fr7q.reactiverouter.StateLossStrategy
+import com.github.c5fr7q.reactiverouter.extractor.SimpleTagExtractor
+import com.github.c5fr7q.reactiverouter.navigator.SimpleNavigator
+import io.reactivex.rxjava3.core.Observable
 
 class DemoReactiveRouter(
 	fragmentManager: FragmentManager,
 	demoScopeProvider: DemoScopeProvider
 ) :
-	ReactiveRouter<SimpleNavigator, DemoScopeProvider>(
+	com.github.c5fr7q.reactiverouter.ReactiveRouter<SimpleNavigator, DemoScopeProvider>(
 		SimpleNavigator(R.id.main_container, SimpleTagExtractor(), fragmentManager),
 		demoScopeProvider,
 		fragmentManager,

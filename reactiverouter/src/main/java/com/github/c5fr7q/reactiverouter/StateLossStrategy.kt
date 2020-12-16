@@ -1,4 +1,4 @@
-package com.example.reactiverouter.base
+package com.github.c5fr7q.reactiverouter
 
 /**
  * Defines behavior on "Can not perform this action after onSaveInstanceState"
@@ -16,7 +16,7 @@ enum class StateLossStrategy {
 
 	/**
 	 * Crashes on exception.
-	 * Use it if your [com.example.reactiverouter.base.navigator.Navigator] is based on allowingStateLoss methods only
+	 * Use it if your [com.github.c5fr7q.reactiverouter.navigator.Navigator] is based on allowingStateLoss methods only
 	 * */
 	ERROR
 }

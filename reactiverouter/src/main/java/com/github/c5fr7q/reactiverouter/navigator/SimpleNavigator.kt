@@ -1,10 +1,10 @@
-package com.example.reactiverouter.base.navigator
+package com.github.c5fr7q.reactiverouter.navigator
 
 import androidx.annotation.IdRes
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import com.example.reactiverouter.base.extractor.TagExtractor
+import com.github.c5fr7q.reactiverouter.extractor.TagExtractor
 
 open class SimpleNavigator(
 	@IdRes

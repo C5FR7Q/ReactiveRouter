@@ -4,25 +4,18 @@ plugins {
 }
 
 android {
-	compileSdkVersion 29
-	buildToolsVersion "30.0.0"
+	compileSdkVersion 30
+	buildToolsVersion "30.0.2"
 
 	defaultConfig {
 		applicationId "com.example.reactiverouter"
 		minSdkVersion 21
-		targetSdkVersion 29
+		targetSdkVersion 30
 		versionCode 1
 		versionName "1.0"
 
-		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 	}
 
-	buildTypes {
-		release {
-			minifyEnabled false
-			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-		}
-	}
 	compileOptions {
 		sourceCompatibility JavaVersion.VERSION_1_8
 		targetCompatibility JavaVersion.VERSION_1_8
@@ -33,16 +26,16 @@ android {
 }
 
 dependencies {
+	implementation project(":reactiverouter")
 
 	implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 	implementation "androidx.core:core-ktx:$androidxVersion"
-	implementation "androidx.appcompat:appcompat:$androidxVersion"
+	implementation "androidx.appcompat:appcompat:$androidxAppcompatVersion"
 	implementation "com.google.android.material:material:$materialVersion"
-	implementation "androidx.constraintlayout:constraintlayout:$constraintLayoutVersion"
 
-	implementation "io.reactivex.rxjava2:rxandroid:$rxJavaVersion"
-	implementation "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
-	implementation "io.reactivex.rxjava2:rxkotlin:$rxKotlinVersion"
-	implementation "com.jakewharton.rxbinding2:rxbinding:$rxJavaVersion"
+	implementation "io.reactivex.rxjava3:rxandroid:$rxAndroidVersion"
+	implementation "io.reactivex.rxjava3:rxjava:$rxJavaVersion"
 
 }
+
+apply from: 'publish.gradle'
