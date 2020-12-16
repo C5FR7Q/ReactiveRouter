@@ -1,4 +1,7 @@
 # ReactiveRouter
+[ ![Download](https://api.bintray.com/packages/c5fr7q/ReactiveRouter/reactiverouter/images/download.svg) ](https://bintray.com/c5fr7q/ReactiveRouter/reactiverouter/_latestVersion)
+[![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+
 
 `ReactiveRouter` is a navigational component (and a library), that builds navigation in accordance with reactive approach. Generally designed for `Fragment`s usage. It provides something like `FragmentManager`'s "window", where **the only** navigational action is acceptable at the same time.
 
@@ -26,10 +29,26 @@ router.run {
 6. Complex scopes are interruptable;
 7. Provide and use base navigation (such as manipulations above FragmentManager, Intents (if need) e.t.c.) yourself. Or use / extend existing simple one.
 
+## Getting started
 
-## Base classes
+### Download
+Gradle:
+```groovy
+implementation 'com.github.c5fr7q:reactiverouter:1.0.0'
+```
+Maven:
+```xml
+<dependency>
+  <groupId>com.github.c5fr7q</groupId>
+  <artifactId>reactiverouter</artifactId>
+  <version>1.0.0</version>
+  <type>pom</type>
+</dependency>
+```
 
-### Navigator
+### Base classes
+
+#### Navigator
 
 The place for playing with `FragmentManager`. All the base navigation should be defined there: open, close, replace e.t.c.
 
@@ -49,10 +68,10 @@ fun show(fragment: Fragment) {
 }
 ```
 
-### Scope
+#### Scope
 Defines a single navigational action to be done above `Navigator`. There're two types of scopes: simple (`Simple`) and complex (`Reactive`, `Chain`)
 
-#### Simple
+##### Simple
 A simple navigational action. 
 
 Contains flag `isInterrupting`. If `true`, than stops all complex scopes, that are in the execution right now.
@@ -64,7 +83,7 @@ Example:
 Simple<SimpleNavigator>(false) { show(CandyShopFragment()) }
 ```
 
-#### Reactive
+##### Reactive
 Sometimes it's necessary to do some navigation in accordance with some data. The source of that data is always the same (e.g. some Repository), so you want to reuse it. `Reactive` scope might be useful here: it takes a `Single` (that provides such a data) and a `Scope?`, that possibly should be executed (according to that data).
 
 Let's say you want to show something only in case of A/B test says you should to. You will also need to reuse it. Example:
@@ -78,7 +97,7 @@ Reactive(someProvider.shouldShow()) { shouldShow ->
 }
 ```
 
-#### Chain
+##### Chain
 `Simple` supports concatenation only with another `Simple`. What if you want to concat `Simple` with `Reactive` (different scopes)? You can concat `Simple` with `Reactive`'s `Simple?` inside of `Reactive` (and they will be executed simultaneously). That's ok, if you're ready to wait `Reactive`'s `Single` completion. If not, then use `Chain`. It woun't execute scopes simultaneously. Instead, they will be executed one by one. It's like if you're trying to execute them separately, but with the difference, that each next `Scope` will be executed **only** in case of previous one was executed successfully.
 
 An example. You can open Candy Info screen from anywhere by its name. It should always be above Candy Shop in back stack. To do it you first should check, whether that name is about valid Candy. That check takes ~ 2.5 seconds, that's why the next requirement appeared: show Candy Shop first, an then show Candy Info on rediness.
@@ -101,7 +120,7 @@ Chain(
 )
 ```
 
-### ScopeProvider
+#### ScopeProvider
 That's where you should define all of your scopes. It's simply like the place where only scopes you can use are defined.
 
 Contains convenient `scope` functions, that allows you do something like that (instead of what we have in the example above):
@@ -129,7 +148,7 @@ fun showCandyInfo(candyName: String) {
 }
 ```
 
-### ReactiveRouter
+#### ReactiveRouter
 
 Adds scopes to the queue and then executes them.
 
@@ -149,13 +168,13 @@ Both returns reactive result of execution:
 1. `callResponsive` - whether `Scope` was executed or not;
 2. `call` - like `callResponsive`, but with ingore of returned value.
 
-### StateLossStrategy
+#### StateLossStrategy
 Defines, what should `ReactiveRouter` do in case of `java.lang.IllegalStateException: Can not perform this action after onSaveInstanceState`:
 1. `POSTPONE` - executes scopes only in `RESUMED` state of `LifecycleOwner`;
 2. `IGNORE` - ignores scopes, that catches such an error;
 3. `ERROR` - throws an exception.
 
-## Additional classes
+### Additional classes
 
 1. **SimpleNavigator** is a `Navigator`, that provides base set of navigational, such as `show`, `showDialog`, `close`, different checks e.t.c.
 2. **SimpleScopeProvide** is a `ScopeProvider`, that contains `closeCurrent` method, which closes current screen.
